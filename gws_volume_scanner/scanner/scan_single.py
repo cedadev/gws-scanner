@@ -1,4 +1,4 @@
-"""Test different ways of walking a filesystem."""
+"""Scan a single GWS."""
 import queue as queue_
 
 import elasticsearch.helpers as esh
