@@ -1,0 +1,6 @@
+full_item_walk_dirs = [""]
+aggregate_subdir_paths = []
+aggregate_subdir_names = [
+    ".git"
+]
+scan_depth = 2

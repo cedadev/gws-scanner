@@ -1,0 +1,57 @@
+[scanner]
+### Scanner table contains configuration for the scanner itself.
+
+scan_processes = 2
+scan_max_threads_per_process = 8
+
+queue_length_scale_factor = 1000
+
+[scanner.elastic]
+data_index_name = "gws-scandata"
+aggregate_index_name = "gws-aggdata"
+volume_index_name = "gws-volumestats"
+
+api_key = ""
+ca_certs = ""
+use_ssl = false
+hosts = [
+    "127.0.0.1"
+]
+timeout = 60
+
+[scanner.daemon]
+min_scan_frequency_hours = 1
+gws_list = [
+    "/Users/alexander.manning/projects",
+    "/Users/alexander.manning/Music",
+    "/Users/alexander.manning/slurm_training",
+]
+
+[gws.overrides]
+### Overrides table sets limits for all GWSs.
+aggregate_subdir_names = [
+    ".git",
+    ".svn",
+    "__pycache__",
+    ".mypy_cache",
+    "node_modules",
+    ".npm",
+]
+scan_depth = 10
+
+### Defaults table is used if there is no local config file.
+[gws.defaults]
+full_item_walk_dirs = [""]
+aggregate_subdir_paths = []
+aggregate_subdir_names = [
+    ".git",
+    ".svn",
+]
+scan_depth = 5
+
+### You can override the configuration for a speficic GWS here.
+#[gws.configs."/Users/alexander.manning"]
+#full_item_walk_dirs = ["/Users/alexander.manning/Downloads"]
+#aggregate_subdir_paths = []
+#aggregate_subdir_names = []
+#scan_depth = 2
