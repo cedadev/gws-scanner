@@ -27,7 +27,6 @@ class ElasticSchema(typing.TypedDict):
 class DaemonSchema(typing.TypedDict):
     """Schema for the scanner daemon."""
 
-    min_scan_frequency_hours: int
     gws_list: typing.List[str]
 
 

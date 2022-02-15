@@ -20,7 +20,6 @@ hosts = [
 timeout = 60
 
 [scanner.daemon]
-min_scan_frequency_hours = 1
 gws_list = [
     "/Users/alexander.manning/projects",
     "/Users/alexander.manning/Music",
