@@ -7,6 +7,7 @@ name = "gws_volume_scanner"
 version = "0.0.1"
 description = "Tool for scanning filesystems and aggregating data in elasticsearch."
 authors = ["Matt Jones <matthew.j.jones@stfc.ac.uk>", "Alex Manning <alexander.manning@stfc.ac.uk>"]
+license = "BSD - see LICENSE file in top-level package directory"
 
 [tool.poetry.dependencies]
 python = '^3.8'
