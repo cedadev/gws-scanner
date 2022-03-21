@@ -32,6 +32,9 @@ def scans(path: str, index: str) -> typing.Any:
     search = search.filter("terms", path__reverse_tree=subpaths)
     search = search.sort("status", "-end_timestamp", "-start_timestamp")
 
+    total = search.count()
+    search = search[0:total]
+
     return search.execute().to_dict()
 
 
@@ -40,6 +43,18 @@ def latest_scan_id(path: str, index: str) -> typing.Optional[str]:
     all_scans = scans(path, index)["hits"]["hits"]
     if all_scans:
         return typing.cast(str, all_scans[0]["_id"])
+    return None
+
+
+def old_scan_ids(
+    path: str, index: str, new: int = 3
+) -> typing.Optional[typing.List[str]]:
+    """Return all but the most recent n scan_ids for a fielpath."""
+    all_scans = scans(path, index)["hits"]["hits"]
+    all_scans = all_scans[new:-1]
+    if all_scans:
+        old_scans = [x["_id"] for x in all_scans]
+        return old_scans
     return None
 
 

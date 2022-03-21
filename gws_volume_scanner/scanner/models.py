@@ -234,10 +234,11 @@ class Volume(esd.Document):
 
     mean_heat = esd.Long()
 
-    def __init__(
-        self,
+    @classmethod
+    def new(
+        cls,
         path: str,
-    ) -> None:
+    ):
         """Initialise a volume information document."""
         kwargs: typing.Dict[str, typing.Any] = {}
 
@@ -246,7 +247,7 @@ class Volume(esd.Document):
 
         kwargs["path"] = path
 
-        super().__init__(**kwargs)
+        return cls(**kwargs)
 
     def add_volume_information(self) -> None:
         """Do a df on the volume in question and incorporate that information into the document."""

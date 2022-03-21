@@ -2,7 +2,9 @@
 import queue as queue_
 
 import elasticsearch.helpers as esh
+import elasticsearch_dsl as esd
 
+from ..client import queries
 from . import aggregate, cli, config, elastic, models, scanner, util
 
 
@@ -13,7 +15,7 @@ def scan_single_gws(
     scanner_q = util.ScanQueueWorker(config_.scanner, elastic_q)
 
     # Add this scan to the volumes index.
-    volumestats = models.Volume(path)
+    volumestats = models.Volume.new(path)
     volumestats.add_volume_information()
     volumestats.save()
 
@@ -24,10 +26,6 @@ def scan_single_gws(
 
     # Shutdown workers.
     scanner_q.shutdown()
-
-    # Do a query on all the data we just collected and save it to long term stats.
-    volumestats.add_endofscan(config_.scanner["elastic"]["data_index_name"])
-    volumestats.save()
 
     # Query aggregate data and save the aggregations into es.
     results = []
@@ -42,6 +40,27 @@ def scan_single_gws(
         results,
         index=config_.scanner["elastic"]["aggregate_index_name"],
     )
+
+    # Cleanup old views of the tree of this filesystem.
+    old_scan_ids = queries.old_scan_ids(
+        path, config_.scanner["elastic"]["volume_index_name"]
+    )
+    if old_scan_ids:
+        for oldscan in old_scan_ids:
+            scanstatus = models.Volume.get(id=oldscan)
+            if scanstatus.status in ["complete", "in_progress"]:
+                esd.Search(index=config_.scanner["elastic"]["data_index_name"]).query(
+                    "match", scan_id=oldscan
+                ).delete()
+                if scanstatus.status == "complete":
+                    scanstatus.status = "removed"
+                elif scanstatus.status == "in_progress":
+                    scanstatus.status = "failed"
+                scanstatus.save()
+
+    # Do a query on all the data we just collected and save it to long term stats.
+    volumestats.add_endofscan(config_.scanner["elastic"]["data_index_name"])
+    volumestats.save()
 
 
 def main() -> None:
