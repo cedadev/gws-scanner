@@ -60,10 +60,8 @@ def old_scan_ids(
     path: str, index: str, new: int = 3
 ) -> typing.Optional[typing.List[str]]:
     """Return all but the most recent n scan_ids for a fielpath."""
-    all_scans = scans(path, index, sort=("-end_timestamp", "-start_timestamp"))["hits"][
-        "hits"
-    ]
-    all_scans = all_scans[new:-1]
+    all_scans = scans(path, index, sort=("-start_timestamp"))["hits"]["hits"]
+    all_scans = all_scans[new:]
     if all_scans:
         old_scans = [x["_id"] for x in all_scans]
         return old_scans
