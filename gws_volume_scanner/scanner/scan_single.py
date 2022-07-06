@@ -45,6 +45,7 @@ def scan_single_gws(
     old_scan_ids = queries.old_scan_ids(
         path, config_.scanner["elastic"]["volume_index_name"]
     )
+    old_scan_ids.remove(volumestats.meta.id)
     if old_scan_ids:
         for oldscan in old_scan_ids:
             scanstatus = models.Volume.get(id=oldscan)

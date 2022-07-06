@@ -19,22 +19,32 @@ def _get_mapping(index: str, mapping_name: str) -> typing.Any:
     return mappinglist[mapping_name]["properties"].keys()
 
 
-def scans(path: str, index: str) -> typing.Any:
-    """Query the available scans for a file path."""
+def _list_tree_above(path: str) -> str:
+    """For a given path, let a list of all paths above it in the tree."""
     subpaths: list[str] = []
     for part in path.strip("/").split("/"):
         if len(subpaths) == 0:
             subpaths.append("/" + part)
         else:
             subpaths.append(subpaths[-1] + "/" + part)
+    return subpaths
+
+
+def scans(
+    path: str,
+    index: str,
+    sort: tuple[str, ...] = ("status", "-end_timestamp", "-start_timestamp"),
+) -> typing.Any:
+    """Query the available scans for a file path."""
+    subpaths = _list_tree_above(path)
 
     search = esd.Search(index=index)
     search = search.filter("terms", path__reverse_tree=subpaths)
-    search = search.sort("status", "-end_timestamp", "-start_timestamp")
+    search = search.sort(*sort)
+    search = search.extra(track_total_hits=True)
 
     total = search.count()
     search = search[0:total]
-
     return search.execute().to_dict()
 
 
@@ -50,7 +60,9 @@ def old_scan_ids(
     path: str, index: str, new: int = 3
 ) -> typing.Optional[typing.List[str]]:
     """Return all but the most recent n scan_ids for a fielpath."""
-    all_scans = scans(path, index)["hits"]["hits"]
+    all_scans = scans(path, index, sort=("-end_timestamp", "-start_timestamp"))["hits"][
+        "hits"
+    ]
     all_scans = all_scans[new:-1]
     if all_scans:
         old_scans = [x["_id"] for x in all_scans]
