@@ -12,13 +12,22 @@ def main() -> None:
     elastic.init(config_.scanner["elastic"])
     elastic_q = util.ElasticQueueWorker(config_.scanner)
 
-    for gws in config_.scanner["daemon"]["gws_list"]:
-        try:
-            os.scandir(gws)
-        except FileNotFoundError:
-            print(f"{gws} does not exist.")
-        else:
-            scan_single.scan_single_gws(gws, config_, elastic_q.queue)
+    while True:
+        with open(config_.scanner['daemon']['gws_list_file'], 'r') as f:
+            toscan = f.readlines()
+        print(f'###### Loaded {len(toscan)} paths to scan ######')
+
+        while toscan:
+            gws = toscan.pop()
+
+            try:
+                os.scandir(gws)
+            except FileNotFoundError:
+                print(f"{gws} does not exist.")
+            else:
+                print(f"Started scan of {gws}."
+                scan_single.scan_single_gws(gws, config_, elastic_q.queue)
+                print(f"Successfully scanned {gws}. {len(toscan)} left.")
 
     elastic_q.shutdown()
 
