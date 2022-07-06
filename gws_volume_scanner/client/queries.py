@@ -57,13 +57,13 @@ def latest_scan_id(path: str, index: str) -> typing.Optional[str]:
 
 
 def scan_ids(path: str, index: str) -> typing.Optional[typing.List[str]]:
-    """Return all scan_ids for a fielpath, not including parent paths."""
+    """Return all scan_ids for a filepath, not including parent paths."""
     search = esd.Search(index=index)
     search = search.filter("terms", path__reverse_tree=[path.rstrip("/")])
 
     ids = []
     for scan in search.scan():
-        ids.append(scan["_id"])
+        ids.append(scan.meta.id)
 
     if ids:
         return ids
