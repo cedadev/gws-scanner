@@ -19,7 +19,7 @@ def _get_mapping(index: str, mapping_name: str) -> typing.Any:
     return mappinglist[mapping_name]["properties"].keys()
 
 
-def _list_tree_above(path: str) -> str:
+def _list_tree_above(path: str) -> typing.List[str]:
     """For a given path, let a list of all paths above it in the tree."""
     subpaths: list[str] = []
     for part in path.strip("/").split("/"):
@@ -33,7 +33,7 @@ def _list_tree_above(path: str) -> str:
 def scans(
     path: str,
     index: str,
-    sort: tuple[str, ...] = ("status", "-end_timestamp", "-start_timestamp"),
+    sort: typing.Tuple[str, ...] = ("status", "-end_timestamp", "-start_timestamp"),
 ) -> typing.Any:
     """Query the available scans for a file path."""
     subpaths = _list_tree_above(path)
