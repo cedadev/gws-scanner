@@ -24,6 +24,12 @@ def parse_daemon_args() -> argparse.Namespace:
     )
     # Required arguments.
     parser.add_argument(
-        "config_file", help="The pain to the main configration file.", type=str
+        "config_file", help="The path to the main configration file.", type=str
+    )
+
+    parser.add_argument(
+        "--run-forever",
+        action="store_true",
+        help="Scan all the passes paths continuiously in a loop without quiting.",
     )
     return parser.parse_args()

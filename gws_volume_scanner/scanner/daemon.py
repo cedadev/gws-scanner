@@ -27,6 +27,9 @@ def main() -> None:
                 scan_single.scan_single_gws(gws, config_, elastic_q.queue)
                 print(f"Successfully scanned {gws}. {len(toscan)} left.")
 
+        if not args.run_forever:
+            break
+
     elastic_q.shutdown()
 
 
