@@ -27,7 +27,7 @@ class ElasticSchema(typing.TypedDict):
 class DaemonSchema(typing.TypedDict):
     """Schema for the scanner daemon."""
 
-    gws_list: typing.List[str]
+    gws_list_file: str
 
 
 class ScannerSchema(typing.TypedDict):
