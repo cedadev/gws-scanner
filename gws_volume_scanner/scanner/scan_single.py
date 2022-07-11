@@ -57,9 +57,12 @@ def scan_single_gws(
         for oldscan in old_scan_ids:
             scanstatus = models.Volume.get(id=oldscan)
             if scanstatus.status in ["complete", "in_progress"]:
-                esd.Search(index=config_.scanner["elastic"]["data_index_name"]).filter(
-                    "term", scan_id=oldscan
-                ).delete()
+                search = esd.Search(
+                    index=config_.scanner["elastic"]["data_index_name"]
+                ).filter("term", scan_id=oldscan)
+                # Paper-over error where elasticsearch tries to delete the same documents twice.
+                search.params(conflicts="proceed")
+                search.delete()
                 if scanstatus.status == "complete":
                     scanstatus.status = "removed"
                 elif scanstatus.status == "in_progress":
