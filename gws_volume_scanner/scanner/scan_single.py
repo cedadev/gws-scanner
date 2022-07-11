@@ -45,6 +45,10 @@ def scan_single_gws(
     old_scan_ids = queries.scan_ids(
         path, config_.scanner["elastic"]["volume_index_name"]
     )
+
+    # Wait for all the new data to be submitted to elasticsearch before doing deletions.
+    elastic_q.join()
+
     if old_scan_ids:
         try:
             old_scan_ids.remove(volumestats.meta.id)
@@ -53,8 +57,8 @@ def scan_single_gws(
         for oldscan in old_scan_ids:
             scanstatus = models.Volume.get(id=oldscan)
             if scanstatus.status in ["complete", "in_progress"]:
-                esd.Search(index=config_.scanner["elastic"]["data_index_name"]).query(
-                    "match", scan_id=oldscan
+                esd.Search(index=config_.scanner["elastic"]["data_index_name"]).filter(
+                    "term", scan_id=oldscan
                 ).delete()
                 if scanstatus.status == "complete":
                     scanstatus.status = "removed"
