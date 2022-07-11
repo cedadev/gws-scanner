@@ -16,6 +16,7 @@ def main() -> None:
         with open(config_.scanner["daemon"]["gws_list_file"], "r") as f:
             toscan = f.readlines()
         print(f"###### Loaded {len(toscan)} paths to scan. ######")
+        toscan.reverse()  # It is unintuitive to loop through the file backwards.
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
             try:
