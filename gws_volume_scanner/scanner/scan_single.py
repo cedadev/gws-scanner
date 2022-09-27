@@ -1,6 +1,7 @@
 """Scan a single GWS."""
 import queue as queue_
 
+import elasticsearch.exceptions
 import elasticsearch.helpers as esh
 import elasticsearch_dsl as esd
 
@@ -62,7 +63,10 @@ def scan_single_gws(
                 ).filter("term", scan_id=oldscan)
                 # Paper-over error where elasticsearch tries to delete the same documents twice.
                 search.params(conflicts="proceed")
-                search.delete()
+                try:
+                    search.delete()
+                except elasticsearch.exceptions.ConflictError:
+                    print(f"Falied to delete old data for scan id {oldscan}")
                 if scanstatus.status == "complete":
                     scanstatus.status = "removed"
                 elif scanstatus.status == "in_progress":
