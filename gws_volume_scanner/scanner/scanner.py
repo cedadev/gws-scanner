@@ -25,7 +25,8 @@ def queuescan(
     """Walk the given path and places objects to scan in a queue."""
     gwsconfig = config_.gws_config(str(path))
 
-    for (dirpath, dirnames, filenames) in vos.walk(path):
+    # Because we vendor the os module, it's type hints do not get picked up by mypy.
+    for (dirpath, dirnames, filenames) in vos.walk(path):  # type: ignore[no-untyped-call]
         depth = len(dirpath.removeprefix(str(path)).strip("/").split("/"))
 
         walk_items = dirpath in gwsconfig["full_item_walk_dirs"]
@@ -106,7 +107,8 @@ def worker(
 
         if aggregate_subdirs:
             for dir_ in dirnames:
-                for (idirpath, _, ifilenames) in vos.walk(os.path.join(dirpath, dir_)):
+                # Because we vendor the os module, it's type hints do not get picked up by mypy.
+                for (idirpath, _, ifilenames) in vos.walk(os.path.join(dirpath, dir_)):  # type: ignore[no-untyped-call]
                     thread_q.put((folder, idirpath))
                     for file in ifilenames:
                         thread_q.put(

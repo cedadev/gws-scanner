@@ -238,7 +238,7 @@ class Volume(esd.Document):
     def new(
         cls,
         path: str,
-    ):
+    ) -> esd.Document:
         """Initialise a volume information document."""
         kwargs: typing.Dict[str, typing.Any] = {}
 

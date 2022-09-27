@@ -1,6 +1,5 @@
 # fmt: off
 # isort: skip_file
-# type: ignore
 r"""OS routines for NT or Posix depending on what system we're on.
 
 This exports:

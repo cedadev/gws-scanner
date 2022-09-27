@@ -39,3 +39,8 @@ disable=[
 strict = true
 ignore_missing_imports = true
 disallow_subclassing_any = false
+implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = "gws_volume_scanner.vendor.*"
+ignore_errors = true
