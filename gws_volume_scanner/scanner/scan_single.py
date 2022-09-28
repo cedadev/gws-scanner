@@ -30,17 +30,25 @@ def scan_single_gws(
 
     # Query aggregate data and save the aggregations into es.
     results = []
-    results += aggregate.aggregate_filetypes(
-        path, config_.scanner["elastic"], volumestats
-    )
-    results += aggregate.aggregate_users(path, config_.scanner["elastic"], volumestats)
-    results += aggregate.aggregate_heat(path, config_.scanner["elastic"], volumestats)
-    connection = elastic.get_connection(config_.scanner["elastic"])
-    esh.bulk(
-        connection,
-        results,
-        index=config_.scanner["elastic"]["aggregate_index_name"],
-    )
+    try:
+        results += aggregate.aggregate_filetypes(
+            path, config_.scanner["elastic"], volumestats
+        )
+        results += aggregate.aggregate_users(
+            path, config_.scanner["elastic"], volumestats
+        )
+        results += aggregate.aggregate_heat(
+            path, config_.scanner["elastic"], volumestats
+        )
+    except elasticsearch.exceptions.ConnectionTimeout:
+        print(f"Failed to generate aggregate data for {path}...continuing.")
+    else:
+        connection = elastic.get_connection(config_.scanner["elastic"])
+        esh.bulk(
+            connection,
+            results,
+            index=config_.scanner["elastic"]["aggregate_index_name"],
+        )
 
     # Cleanup old views of the tree of this filesystem.
     old_scan_ids = queries.scan_ids(
