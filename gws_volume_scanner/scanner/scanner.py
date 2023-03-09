@@ -63,6 +63,8 @@ def queuescan(
             except queue_.Full:
                 continue
             break
+        if abort.is_set():
+            break
 
 
 def worker(
@@ -155,8 +157,7 @@ def threadworker(
             continue
         try:
             folder.incorporate_child(path)
-        except OSError as err:
+        except OSError:
             abort.set()
-            raise errors.AbortError from err
 
         thread_q.task_done()

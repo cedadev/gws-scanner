@@ -28,8 +28,8 @@ class CancellableQueue(queue_.Queue[T]):
         with self.all_tasks_done:
             while self.unfinished_tasks:
                 if self.abort_event.is_set():
-                    raise errors.AbortError()
-                self.all_tasks_done.wait(30)
+                    return
+                self.all_tasks_done.wait(5)
 
 
 class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue[T]):
@@ -55,8 +55,8 @@ class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue[T]):
         with self._cond:
             while not self._unfinished_tasks._semlock._is_zero():
                 if self.abort_event.is_set():
-                    raise errors.AbortError()
-                self._cond.wait(30)
+                    return
+                self._cond.wait(5)
 
 
 class ElasticQueueWorker:
