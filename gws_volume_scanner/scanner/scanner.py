@@ -2,6 +2,7 @@
 import copy
 import datetime as dt
 import multiprocessing as mp
+import multiprocessing.synchronize
 import os
 import queue as queue_
 import threading as th
@@ -21,6 +22,7 @@ def queuescan(
     config_: config.ScannerConfig,
     start_timestamp: dt.datetime,
     scan_id: str,
+    abort: multiprocessing.synchronize.Event,
 ) -> None:
     """Walk the given path and places objects to scan in a queue."""
     gwsconfig = config_.gws_config(str(path))
@@ -44,17 +46,23 @@ def queuescan(
             dirnames.clear()
         else:
             pass_dirnames = dirnames
-        queue.put(
-            (
-                dirpath,
-                pass_dirnames,
-                filenames,
-                walk_items,
-                aggregate_subdirs,
-                start_timestamp,
-                scan_id,
-            )
-        )
+        while not abort.is_set():
+            try:
+                queue.put(
+                    (
+                        dirpath,
+                        pass_dirnames,
+                        filenames,
+                        walk_items,
+                        aggregate_subdirs,
+                        start_timestamp,
+                        scan_id,
+                    ),
+                    timeout=5,
+                )
+            except queue_.Full:
+                continue
+            break
 
 
 def worker(

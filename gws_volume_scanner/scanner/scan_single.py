@@ -25,7 +25,12 @@ def scan_single_gws(
 
     # Add paths into the queue for processing.
     scanner.queuescan(
-        path, scanner_q.queue, config_, volumestats.start_timestamp, volumestats.meta.id
+        path,
+        scanner_q.queue,
+        config_,
+        volumestats.start_timestamp,
+        volumestats.meta.id,
+        abort,
     )
 
     # Shutdown workers.
