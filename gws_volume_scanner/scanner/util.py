@@ -9,29 +9,44 @@ from . import config, elastic, errors, models, scanner
 
 
 class CancellableQueue(queue_.Queue):
+    """Create a cancellable Queue."""
+
     def __init__(self, *args, abort_event: th.Event, **kwargs):
         self.abort_event = abort_event
         super().__init__(*args, **kwargs)
 
     def join(self):
+        """Override logic from queue join method.
+
+        Follows the same logic as
+        https://github.com/python/cpython/blob/main/Lib/queue.py#L79
+        but allows the queue to exit when signalled with an error.
+        """
         with self.all_tasks_done:
             while self.unfinished_tasks:
                 if self.abort_event.is_set():
-                    raise errors.AbortError
-                else:
-                    self.all_tasks_done.wait(30)
+                    raise errors.AbortError()
+                self.all_tasks_done.wait(30)
 
 
 class CancellableJoinableQueue(mpq.JoinableQueue):
+    """Create a cancellable multiprocessing Queue."""
+
     def __init__(self, *args, abort_event: mps.Event, **kwargs):
         self.abort_event = abort_event
         super().__init__(*args, **kwargs)
 
     def join(self):
+        """Override logic from multiprocessing queue join method.
+
+        Follows the same logic as
+        https://github.com/python/cpython/blob/main/Lib/multiprocessing/queues.py#L330
+        but allows the queue to exit when signalled with an error.
+        """
         with self._cond:
-            if self.abort_event.is_set():
-                raise errors.AbortError
-            elif not self._unfinished_tasks._semlock._is_zero():
+            while not self._unfinished_tasks._semlock._is_zero():
+                if self.abort_event.is_set():
+                    raise errors.AbortError()
                 self._cond.wait(30)
 
 
