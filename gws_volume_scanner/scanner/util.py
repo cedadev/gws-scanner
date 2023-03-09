@@ -1,21 +1,24 @@
 import multiprocessing as mp
-import multiprocessing.queues as mpq
-import multiprocessing.synchronize as mps
+import multiprocessing.context
+import multiprocessing.queues
+import multiprocessing.synchronize
 import queue as queue_
 import threading as th
 import typing
 
 from . import config, elastic, errors, models, scanner
 
+T = typing.TypeVar("T")
 
-class CancellableQueue(queue_.Queue):
+
+class CancellableQueue(queue_.Queue[T]):
     """Create a cancellable Queue."""
 
-    def __init__(self, *args, abort_event: th.Event, **kwargs):
+    def __init__(self, maxsize: int = 0, *, abort_event: th.Event):
         self.abort_event = abort_event
-        super().__init__(*args, **kwargs)
+        super().__init__(maxsize=maxsize)
 
-    def join(self):
+    def join(self) -> None:
         """Override logic from queue join method.
 
         Follows the same logic as
@@ -29,14 +32,20 @@ class CancellableQueue(queue_.Queue):
                 self.all_tasks_done.wait(30)
 
 
-class CancellableJoinableQueue(mpq.JoinableQueue):
+class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue[T]):
     """Create a cancellable multiprocessing Queue."""
 
-    def __init__(self, *args, abort_event: mps.Event, **kwargs):
+    def __init__(
+        self,
+        maxsize: int = 0,
+        *,
+        ctx: multiprocessing.context.BaseContext,
+        abort_event: multiprocessing.synchronize.Event,
+    ):
         self.abort_event = abort_event
-        super().__init__(*args, **kwargs)
+        super().__init__(maxsize=maxsize, ctx=ctx)
 
-    def join(self):
+    def join(self) -> None:
         """Override logic from multiprocessing queue join method.
 
         Follows the same logic as
@@ -94,7 +103,7 @@ class ScanQueueWorker:
         self,
         config_: config.ScannerSchema,
         elastic_q: queue_.Queue[models.File],
-        abort: mps.Event,
+        abort: multiprocessing.synchronize.Event,
     ):
         # Used to signal to the worker to exit.
         self._shutdown = mp.Event()
