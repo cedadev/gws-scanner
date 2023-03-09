@@ -38,6 +38,7 @@ def scan_single_gws(
 
     # If this scan has been aborted, bail.
     if abort.is_set():
+        elastic_q.join()
         raise errors.AbortError
 
     # Query aggregate data and save the aggregations into es.
