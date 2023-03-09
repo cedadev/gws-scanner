@@ -1,4 +1,5 @@
 """Scan a single GWS."""
+import multiprocessing as mp
 import queue as queue_
 
 import elasticsearch.exceptions
@@ -6,14 +7,16 @@ import elasticsearch.helpers as esh
 import elasticsearch_dsl as esd
 
 from ..client import queries
-from . import aggregate, cli, config, elastic, models, scanner, util
+from . import aggregate, cli, config, elastic, errors, models, scanner, util
 
 
 def scan_single_gws(
     path: str, config_: config.ScannerConfig, elastic_q: queue_.Queue[models.File]
 ) -> None:
     """Scan a single GWS."""
-    scanner_q = util.ScanQueueWorker(config_.scanner, elastic_q)
+    abort = mp.Event()
+
+    scanner_q = util.ScanQueueWorker(config_.scanner, elastic_q, abort)
 
     # Add this scan to the volumes index.
     volumestats = models.Volume.new(path)
@@ -27,6 +30,10 @@ def scan_single_gws(
 
     # Shutdown workers.
     scanner_q.shutdown()
+
+    # If this scan has been aborted, bail.
+    if abort.is_set():
+        raise errors.AbortError
 
     # Query aggregate data and save the aggregations into es.
     results = []

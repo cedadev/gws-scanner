@@ -24,3 +24,7 @@ class FileNotFoundWarning(Warning):
 
     This can happen if a file was moved under the scanner.
     """
+
+
+class AbortError(OSError):
+    pass

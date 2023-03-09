@@ -8,7 +8,7 @@ import threading as th
 import typing
 
 from ..vendor import os as vos
-from . import config, models
+from . import config, errors, models, util
 
 ToScan = typing.Tuple[
     str, typing.Sequence[str], typing.Sequence[str], bool, bool, dt.datetime, str
@@ -26,7 +26,7 @@ def queuescan(
     gwsconfig = config_.gws_config(str(path))
 
     # Because we vendor the os module, it's type hints do not get picked up by mypy.
-    for (dirpath, dirnames, filenames) in vos.walk(path):  # type: ignore[no-untyped-call]
+    for dirpath, dirnames, filenames in vos.walk(path):  # type: ignore[no-untyped-call]
         depth = len(dirpath.removeprefix(str(path)).strip("/").split("/"))
 
         walk_items = dirpath in gwsconfig["full_item_walk_dirs"]
@@ -62,6 +62,7 @@ def worker(
     outqueue: queue_.Queue[models.File],
     config_: config.ScannerSchema,
     shutdown: th.Event,
+    abort: th.Event,
 ) -> None:
     """Consume results of an OS Walk and runs processing on the paths provided."""
     proc = mp.current_process()
@@ -69,16 +70,17 @@ def worker(
 
     innershutdown = mp.Event()
 
-    thread_q: queue_.Queue[tuple[models.File, str]] = queue_.Queue(
+    thread_q: queue_.Queue[tuple[models.File, str]] = util.CancellableQueue(
         maxsize=config_["scan_max_threads_per_process"]
-        * config_["queue_length_scale_factor"]
+        * config_["queue_length_scale_factor"],
+        abort_event=abort,
     )
     thread_p = mp.pool.ThreadPool(
         processes=config_["scan_max_threads_per_process"],
         initializer=threadworker,
-        initargs=((thread_q, innershutdown)),
+        initargs=((thread_q, innershutdown, abort)),
     )
-    while not shutdown.is_set():
+    while (not shutdown.is_set()) and (not abort.is_set()):
         try:
             (
                 dirpath,
@@ -108,7 +110,7 @@ def worker(
         if aggregate_subdirs:
             for dir_ in dirnames:
                 # Because we vendor the os module, it's type hints do not get picked up by mypy.
-                for (idirpath, _, ifilenames) in vos.walk(os.path.join(dirpath, dir_)):  # type: ignore[no-untyped-call]
+                for idirpath, _, ifilenames in vos.walk(os.path.join(dirpath, dir_)):  # type: ignore[no-untyped-call]
                     thread_q.put((folder, idirpath))
                     for file in ifilenames:
                         thread_q.put(
@@ -133,13 +135,20 @@ def worker(
 
 
 def threadworker(
-    thread_q: queue_.Queue[tuple[models.File, str]], shutdown: th.Event
+    thread_q: queue_.Queue[tuple[models.File, str]],
+    shutdown: th.Event,
+    abort: th.Event,
 ) -> None:
     """Worker to aggredate subdirectories into a Folder object."""
-    while not shutdown.is_set():
+    while (not shutdown.is_set()) and (not abort.is_set()):
         try:
             folder, path = thread_q.get(timeout=10)
         except queue_.Empty:
             continue
-        folder.incorporate_child(path)
+        try:
+            folder.incorporate_child(path)
+        except OSError as err:
+            abort.set()
+            raise errors.AbortError from err
+
         thread_q.task_done()
