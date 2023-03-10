@@ -2,9 +2,7 @@
 import datetime as dt
 import typing
 
-SizeBucket = typing.TypedDict(
-    "SizeBucket", {"key": str, "from": int, "to": int}, total=False
-)
+SizeBucket = typing.TypedDict("SizeBucket", {"key": str, "from": int, "to": int}, total=False)
 SIZE_BUCKETS: typing.List[SizeBucket] = [
     {"key": "*-10B", "from": -1, "to": 10},
     {"key": "10B-100B", "from": 10, "to": 100},

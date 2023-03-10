@@ -105,9 +105,7 @@ class File(esd.Document):
                 # This will limit the character set to Latin1, and probably print weird
                 # things if other character sets are in the input.
                 kwargs["path"] = (
-                    (str(path).rstrip("/"))
-                    .encode("utf-8", "surrogateescape")
-                    .decode("ISO-8859-1")
+                    (str(path).rstrip("/")).encode("utf-8", "surrogateescape").decode("ISO-8859-1")
                 )
 
                 kwargs["size"] = stat_.st_size
@@ -160,9 +158,7 @@ class File(esd.Document):
 
                 super().__init__(**kwargs)
 
-    def incorporate_child(
-        self, path: str, stat_: typing.Optional[os.stat_result] = None
-    ) -> None:
+    def incorporate_child(self, path: str, stat_: typing.Optional[os.stat_result] = None) -> None:
         """Agregate the information about another file into this file."""
         try:
             if stat_ is None:
@@ -182,9 +178,7 @@ class File(esd.Document):
                 self.size_bins[bin_]["count"] += 1
                 self.size_bins[bin_]["size"] += stat_.st_size
 
-                heat = categorize.get_time_bin(
-                    dt.datetime.fromtimestamp(stat_.st_atime)
-                )
+                heat = categorize.get_time_bin(dt.datetime.fromtimestamp(stat_.st_atime))
                 self.heat_bins[heat]["count"] += 1
                 self.heat_bins[heat]["size"] += stat_.st_size
 
@@ -195,9 +189,7 @@ class File(esd.Document):
                 # Add this object's age into the mean.
                 atime = dt.datetime.fromtimestamp(stat_.st_atime)
                 age = (self.start_timestamp - atime).total_seconds()
-                self.mean_heat = (
-                    (self.mean_heat * (self.count - 1)) + age
-                ) / self.count
+                self.mean_heat = ((self.mean_heat * (self.count - 1)) + age) / self.count
 
                 self.includes_children = True
 

@@ -33,9 +33,7 @@ def main() -> None:
                 try:
                     scan_single.scan_single_gws(gws, config_, elastic_q.queue)
                 except errors.AbortError as err:
-                    print(
-                        f"Scan of {gws} aborted due to an error in another process. Skipping."
-                    )
+                    print(f"Scan of {gws} aborted due to an error in another process. Skipping.")
                     if fail_count >= FAIL_THRESHOLD:
                         print("Failure threshold reached. The process will exit.")
                         elastic_q.shutdown()

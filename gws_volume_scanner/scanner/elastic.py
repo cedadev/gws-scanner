@@ -124,9 +124,7 @@ def worker(
         except queue_.Empty:
             send = True
         if len(staging) > 0:
-            if (
-                len(staging) >= max(1000, config_["queue_length_scale_factor"])
-            ) or send:
+            if (len(staging) >= max(1000, config_["queue_length_scale_factor"])) or send:
                 esh.bulk(
                     connection,
                     staging,

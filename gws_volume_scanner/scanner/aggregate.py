@@ -8,13 +8,9 @@ def aggregate_filetypes(
     volume_info: models.Volume,
 ) -> list[models.GranularRecord]:
     filetypes = []
-    filetypes_q = queries.filetypes(
-        path, elastic_config["data_index_name"], volume_info.meta.id
-    )
+    filetypes_q = queries.filetypes(path, elastic_config["data_index_name"], volume_info.meta.id)
     for type_ in filetypes_q["aggregations"]["counts"].keys():
-        if type_ != "doc_count" and (
-            filetypes_q["aggregations"]["counts"][type_]["value"] > 0
-        ):
+        if type_ != "doc_count" and (filetypes_q["aggregations"]["counts"][type_]["value"] > 0):
             record = models.GranularRecord(
                 path=path,
                 scan_id=volume_info.meta.id,
@@ -35,13 +31,9 @@ def aggregate_users(
     volume_info: models.Volume,
 ) -> list[models.GranularRecord]:
     users = []
-    users_q = queries.users(
-        path, elastic_config["data_index_name"], volume_info.meta.id
-    )
+    users_q = queries.users(path, elastic_config["data_index_name"], volume_info.meta.id)
     for user in users_q["aggregations"]["counts"].keys():
-        if user != "doc_count" and (
-            users_q["aggregations"]["counts"][user]["value"] > 0
-        ):
+        if user != "doc_count" and (users_q["aggregations"]["counts"][user]["value"] > 0):
             record = models.GranularRecord(
                 path=path,
                 scan_id=volume_info.meta.id,
@@ -62,9 +54,7 @@ def aggregate_heat(
     volume_info: models.Volume,
 ) -> list[models.GranularRecord]:
     heat_bins = []
-    heat_q = queries.hotness(
-        path, elastic_config["data_index_name"], volume_info.meta.id
-    )
+    heat_q = queries.hotness(path, elastic_config["data_index_name"], volume_info.meta.id)
     for hot in heat_q["aggregations"]["counts"].keys():
         if hot != "doc_count" and (heat_q["aggregations"]["counts"][hot]["value"] > 0):
             record = models.GranularRecord(

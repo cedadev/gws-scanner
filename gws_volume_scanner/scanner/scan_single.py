@@ -43,15 +43,9 @@ def scan_single_gws(
     # Query aggregate data and save the aggregations into es.
     results = []
     try:
-        results += aggregate.aggregate_filetypes(
-            path, config_.scanner["elastic"], volumestats
-        )
-        results += aggregate.aggregate_users(
-            path, config_.scanner["elastic"], volumestats
-        )
-        results += aggregate.aggregate_heat(
-            path, config_.scanner["elastic"], volumestats
-        )
+        results += aggregate.aggregate_filetypes(path, config_.scanner["elastic"], volumestats)
+        results += aggregate.aggregate_users(path, config_.scanner["elastic"], volumestats)
+        results += aggregate.aggregate_heat(path, config_.scanner["elastic"], volumestats)
     except elasticsearch.exceptions.ConnectionTimeout:
         print(f"Failed to generate aggregate data for {path}...continuing.")
     else:
@@ -63,9 +57,7 @@ def scan_single_gws(
         )
 
     # Cleanup old views of the tree of this filesystem.
-    old_scan_ids = queries.scan_ids(
-        path, config_.scanner["elastic"]["volume_index_name"]
-    )
+    old_scan_ids = queries.scan_ids(path, config_.scanner["elastic"]["volume_index_name"])
 
     # Wait for all the new data to be submitted to elasticsearch before doing deletions.
     elastic_q.join()
@@ -78,9 +70,9 @@ def scan_single_gws(
         for oldscan in old_scan_ids:
             scanstatus = models.Volume.get(id=oldscan)
             if scanstatus.status in ["complete", "in_progress"]:
-                search = esd.Search(
-                    index=config_.scanner["elastic"]["data_index_name"]
-                ).filter("term", scan_id=oldscan)
+                search = esd.Search(index=config_.scanner["elastic"]["data_index_name"]).filter(
+                    "term", scan_id=oldscan
+                )
                 # Paper-over error where elasticsearch tries to delete the same documents twice.
                 search.params(conflicts="proceed")
                 try:

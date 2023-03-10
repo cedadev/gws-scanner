@@ -11,9 +11,7 @@ import typing
 from ..vendor import os as vos
 from . import config, errors, models, util
 
-ToScan = typing.Tuple[
-    str, typing.Sequence[str], typing.Sequence[str], bool, bool, dt.datetime, str
-]
+ToScan = typing.Tuple[str, typing.Sequence[str], typing.Sequence[str], bool, bool, dt.datetime, str]
 
 
 def queuescan(
@@ -35,10 +33,7 @@ def queuescan(
         aggregate_subdirs = (
             (depth >= gwsconfig["scan_depth"])
             or (dirpath in gwsconfig["aggregate_subdir_paths"])
-            or (
-                dirpath.strip("/").rpartition("/")[2]
-                in gwsconfig["aggregate_subdir_names"]
-            )
+            or (dirpath.strip("/").rpartition("/")[2] in gwsconfig["aggregate_subdir_names"])
         )
 
         if aggregate_subdirs:
@@ -81,8 +76,7 @@ def worker(
     innershutdown = mp.Event()
 
     thread_q: queue_.Queue[tuple[models.File, str]] = util.CancellableQueue(
-        maxsize=config_["scan_max_threads_per_process"]
-        * config_["queue_length_scale_factor"],
+        maxsize=config_["scan_max_threads_per_process"] * config_["queue_length_scale_factor"],
         abort_event=abort,
     )
     thread_p = mp.pool.ThreadPool(
@@ -109,9 +103,7 @@ def worker(
         if walk_items:
             for file in filenames:
                 filepath = os.path.join(dirpath, file)
-                outqueue.put(
-                    models.File(filepath, start_timestamp, scan_id).to_dict(True)
-                )
+                outqueue.put(models.File(filepath, start_timestamp, scan_id).to_dict(True))
         else:
             for file in filenames:
                 filepath = os.path.join(dirpath, file)

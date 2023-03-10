@@ -9,9 +9,7 @@ def parse_single_args() -> argparse.Namespace:
         description="The GWS volume scanner scans file path and aggregates data into elasticsearch."
     )
     # Required arguments.
-    parser.add_argument(
-        "config_file", help="The pain to the main configration file.", type=str
-    )
+    parser.add_argument("config_file", help="The pain to the main configration file.", type=str)
     parser.add_argument("gws_path", help="The path to the GWS to scan.", type=str)
 
     return parser.parse_args()
@@ -23,9 +21,7 @@ def parse_daemon_args() -> argparse.Namespace:
         description="The GWS volume scanner scans file path and aggregates data into elasticsearch."
     )
     # Required arguments.
-    parser.add_argument(
-        "config_file", help="The path to the main configration file.", type=str
-    )
+    parser.add_argument("config_file", help="The path to the main configration file.", type=str)
 
     parser.add_argument(
         "--run-forever",

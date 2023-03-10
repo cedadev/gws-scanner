@@ -18,7 +18,7 @@ def create_subtree(
     level: int = 0,
     count: int = 10,
     max_level: int = 5,
-    max_size: int = 5 ** 8,
+    max_size: int = 5**8,
 ) -> typing.Tuple[typing.Set[pathlib.Path], typing.Set[pathlib.Path]]:
     files = set()
     folders = set()
@@ -53,9 +53,7 @@ def create_subtree(
     return (folders, files)
 
 
-FileTestTreeInfo = typing.Tuple[
-    pathlib.Path, typing.Set[pathlib.Path], typing.Set[pathlib.Path]
-]
+FileTestTreeInfo = typing.Tuple[pathlib.Path, typing.Set[pathlib.Path], typing.Set[pathlib.Path]]
 
 
 @pytest.fixture(scope="session")
