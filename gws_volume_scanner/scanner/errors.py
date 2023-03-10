@@ -27,4 +27,8 @@ class FileNotFoundWarning(Warning):
 
 
 class AbortError(OSError):
-    pass
+    """Raised when a scanner thread fails."""
+
+
+class AbortScanError(AbortError):
+    """Raised when there are too many failures and the scanner should exit."""

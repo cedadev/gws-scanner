@@ -32,7 +32,8 @@ class CancellableQueue(queue_.Queue[T]):
                 self.all_tasks_done.wait(5)
 
 
-class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue[T]):
+# The type of this should be multiprocessing.queues.JoinableQueue[T] but that breaks at runtime.
+class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue):  # type: ignore[type-arg]
     """Create a cancellable multiprocessing Queue."""
 
     def __init__(
@@ -52,11 +53,12 @@ class CancellableJoinableQueue(multiprocessing.queues.JoinableQueue[T]):
         https://github.com/python/cpython/blob/main/Lib/multiprocessing/queues.py#L330
         but allows the queue to exit when signalled with an error.
         """
-        with self._cond:
-            while not self._unfinished_tasks._semlock._is_zero():
+        # This errors probably relate to the whole class not being typed properly
+        with self._cond:  # type: ignore[attr-defined]
+            while not self._unfinished_tasks._semlock._is_zero():  # type: ignore[attr-defined]
                 if self.abort_event.is_set():
                     return
-                self._cond.wait(5)
+                self._cond.wait(5)  # type: ignore[attr-defined]
 
 
 class ElasticQueueWorker:
