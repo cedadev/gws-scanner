@@ -38,7 +38,6 @@ def scan_single_gws(
 
     # If this scan has been aborted, bail.
     if abort.is_set():
-        elastic_q.join()
         raise errors.AbortError
 
     # Query aggregate data and save the aggregations into es.
@@ -114,10 +113,11 @@ def main() -> None:
     # Create queue/worker for sending data to elasticsearch.
     elastic_q = util.ElasticQueueWorker(config_.scanner)
 
-    scan_single_gws(args.gws_path, config_, elastic_q.queue)
-
-    # Shutdown workers.
-    elastic_q.shutdown()
+    try:
+        scan_single_gws(args.gws_path, config_, elastic_q.queue)
+    finally:
+        # Shutdown workers.
+        elastic_q.shutdown()
 
 
 if __name__ == "__main__":
