@@ -20,11 +20,15 @@ hosts = [
 timeout = 60
 
 [scanner.daemon]
-gws_list = [
-    "/Users/alexander.manning/projects",
-    "/Users/alexander.manning/Music",
-    "/Users/alexander.manning/slurm_training",
-]
+fail_threshold = 5
+client_id = ""
+client_secret = ""
+scopes = [
+    ""
+    ]
+token_endpoint = ""
+services_endpoint = ""
+
 
 [gws.overrides]
 ### Overrides table sets limits for all GWSs.

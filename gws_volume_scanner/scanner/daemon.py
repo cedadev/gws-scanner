@@ -1,9 +1,10 @@
 """Continuously scan all GWSes."""
 import os
+import pathlib
+
+import authlib
 
 from . import cli, config, elastic, errors, scan_single, util
-
-FAIL_THRESHOLD = 5
 
 
 def main() -> None:
@@ -18,10 +19,8 @@ def main() -> None:
     total_successful_scans = 0
 
     while True:
-        with open(config_.scanner["daemon"]["gws_list_file"], "r") as f:
-            toscan = f.readlines()
+        toscan = get_gws_list(config_.scanner["daemon"])
         print(f"###### Loaded {len(toscan)} paths to scan. ######")
-        toscan.reverse()  # It is unintuitive to loop through the file backwards.
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
             try:
@@ -34,13 +33,13 @@ def main() -> None:
                     scan_single.scan_single_gws(gws, config_, elastic_q.queue)
                 except errors.AbortError as err:
                     print(f"Scan of {gws} aborted due to an error in another process. Skipping.")
-                    if fail_count >= FAIL_THRESHOLD:
+                    if fail_count >= config_.scanner["daemon"]["fail_threshold"]:
                         print("Failure threshold reached. The process will exit.")
                         elastic_q.shutdown()
                         raise errors.AbortScanError from err
                     fail_count += 1
                     print(
-                        "There have been {fail_count} failures, so far, will exit at {FAIL_THRESHOLD}."
+                        'There have been {fail_count} failures, so far, will exit at {config_.scanner["daemon"]["fail_threshold"]}'
                     )
                 else:
                     total_successful_scans += 1
@@ -53,6 +52,32 @@ def main() -> None:
             break
 
     elastic_q.shutdown()
+
+
+def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
+    """Get a list of paths to scan from the projects portal."""
+    client = authlib.integrations.httpx_client.OAuth2Client(
+        daemon_config["client_id"],
+        daemon_config["client_secret"],
+        scope=" ".join(daemon_config["scopes"]),
+    )
+    client.fetch_token(daemon_config["token_endpoint"], grant_type="client_credentials")
+    projects_services = client.get(
+        daemon_config["services_endpoint"],
+        headers={"Accept": "application/json"},
+    ).json()
+
+    services: list[str] = []
+    for service in projects_services:
+        # Only look for group workspaces.
+        if service["category"] == 1:
+            for req in service["requirements"]:
+                # If it doesn't start with a / it's probably not a path.
+                if req["location"].startswith("/"):
+                    # This will remove any double or trailing slashes.
+                    sanitized = str(pathlib.PurePath(req["location"]))
+                    services.append(sanitized)
+    return services
 
 
 if __name__ == "__main__":
