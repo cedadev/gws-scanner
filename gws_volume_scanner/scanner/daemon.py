@@ -2,7 +2,7 @@
 import os
 import pathlib
 
-import authlib
+import authlib.integrations.httpx_client
 
 from . import cli, config, elastic, errors, scan_single, util
 
