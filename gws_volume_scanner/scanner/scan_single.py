@@ -1,6 +1,8 @@
 """Scan a single GWS."""
 import multiprocessing as mp
+import multiprocessing.queues
 import queue as queue_
+import typing
 
 import elasticsearch.exceptions
 import elasticsearch.helpers as esh
@@ -11,9 +13,14 @@ from . import aggregate, cli, config, elastic, errors, models, scanner, util
 
 
 def scan_single_gws(
-    path: str, config_: config.ScannerConfig, elastic_q: queue_.Queue[models.File]
+    path: str,
+    config_: config.ScannerConfig,
+    elastic_q: queue_.Queue[models.File],
+    log_q: multiprocessing.queues.Queue[typing.Any],
 ) -> None:
     """Scan a single GWS."""
+    logger = util.getLogger(__name__, queue=log_q)
+
     abort = mp.Event()
 
     scanner_q = util.ScanQueueWorker(config_.scanner, elastic_q, abort)
@@ -47,7 +54,7 @@ def scan_single_gws(
         results += aggregate.aggregate_users(path, config_.scanner["elastic"], volumestats)
         results += aggregate.aggregate_heat(path, config_.scanner["elastic"], volumestats)
     except elasticsearch.exceptions.ConnectionTimeout:
-        print(f"Failed to generate aggregate data for {path}...continuing.")
+        logger.error(f"Failed to generate aggregate data for {path}...continuing.")
     else:
         connection = elastic.get_connection(config_.scanner["elastic"])
         esh.bulk(
@@ -78,7 +85,7 @@ def scan_single_gws(
                 try:
                     search.delete()
                 except elasticsearch.exceptions.ConflictError:
-                    print(f"Falied to delete old data for scan id {oldscan}")
+                    logger.error(f"Failed to delete old data for scan id {oldscan}")
                 if scanstatus.status == "complete":
                     scanstatus.status = "removed"
                 elif scanstatus.status == "in_progress":
@@ -99,6 +106,11 @@ def main() -> None:
     args = cli.parse_single_args()
     config_ = config.ScannerConfig(args.config_file)
 
+    queue_log_handler = util.QueueLogger(
+        __name__,
+        log_config={"handlers": {"console": {"class": "logging.StreamHandler"}}},
+    )
+
     # Create or update the index in elasticsearch.
     elastic.init(config_.scanner["elastic"])
 
@@ -106,10 +118,11 @@ def main() -> None:
     elastic_q = util.ElasticQueueWorker(config_.scanner)
 
     try:
-        scan_single_gws(args.gws_path, config_, elastic_q.queue)
+        scan_single_gws(args.gws_path, config_, elastic_q.queue, queue_log_handler.queue)
     finally:
         # Shutdown workers.
         elastic_q.shutdown()
+        queue_log_handler.shutdown()
 
 
 if __name__ == "__main__":

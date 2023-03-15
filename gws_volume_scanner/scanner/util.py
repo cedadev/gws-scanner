@@ -1,3 +1,6 @@
+import logging
+import logging.config
+import logging.handlers
 import multiprocessing as mp
 import multiprocessing.context
 import multiprocessing.queues
@@ -142,3 +145,27 @@ class ScanQueueWorker:
 
         # Shutdown queue completely.
         self.queue.join_thread()
+
+
+class QueueLogger:
+    def __init__(self, name: typing.Optional[str] = None, *, log_config):
+        self.queue: multiprocessing.queues.Queue = mp.Queue()  # type: ignore[type-arg]
+        logging.config.dictConfig(log_config)
+        logger = logging.getLogger(name)
+        self.listener = logging.handlers.QueueListener(self.queue, *logger.handlers)
+        self.listener.start()
+
+    def shutdown(self) -> None:
+        self.listener.stop()
+
+
+# The type of this should be multiprocessing.queues.JoinableQueue[T] but that breaks at runtime.
+def getLogger(
+    name: typing.Optional[str] = None, *, queue: multiprocessing.queues.Queue  # type: ignore[type-arg]
+) -> logging.Logger:
+    """Return a logger which will pass all items up to a QueueHandler."""
+    queue_handler = logging.handlers.QueueHandler(queue)
+    logger = logging.getLogger(name)
+    logger.propagate = False
+    logger.addHandler(queue_handler)
+    return logger
