@@ -9,6 +9,7 @@ import queue as queue_
 import threading as th
 import typing
 
+from .. import constants
 from . import config, elastic, errors, models, scanner
 
 T = typing.TypeVar("T")
@@ -149,9 +150,10 @@ class ScanQueueWorker:
 
 class QueueLogger:
     def __init__(self, name: typing.Optional[str] = None, *, log_config):
+        log_config = constants.DEFAULT_LOGGING_CONFIG | log_config
         self.queue: multiprocessing.queues.Queue = mp.Queue()  # type: ignore[type-arg]
         logging.config.dictConfig(log_config)
-        logger = logging.getLogger(name)
+        logger = logging.getLogger()
         self.listener = logging.handlers.QueueListener(self.queue, *logger.handlers)
         self.listener.start()
 

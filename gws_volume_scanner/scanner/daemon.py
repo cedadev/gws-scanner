@@ -13,7 +13,7 @@ def main() -> None:
 
     queue_log_handler = util.QueueLogger(
         __name__,
-        log_config={"handlers": {"console": {"class": "logging.StreamHandler"}}},
+        log_config={},
     )
     logger = util.getLogger(__name__, queue=queue_log_handler.queue)
 

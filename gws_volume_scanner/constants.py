@@ -36,3 +36,9 @@ TIME_BUCKETS: typing.List[TimeBucket] = [
     {"key": "2y-5y", "from": dt.timedelta(days=730), "to": dt.timedelta(days=1825)},
     {"key": "5y-*", "from": dt.timedelta(days=1825)},
 ]
+
+DEFAULT_LOGGING_CONFIG = {
+    "version": 1,
+    "root": {"level": "INFO", "handlers": ["console"]},
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+}

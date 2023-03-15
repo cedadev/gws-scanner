@@ -2,7 +2,6 @@
 import multiprocessing as mp
 import multiprocessing.queues
 import queue as queue_
-import typing
 
 import elasticsearch.exceptions
 import elasticsearch.helpers as esh
@@ -16,7 +15,7 @@ def scan_single_gws(
     path: str,
     config_: config.ScannerConfig,
     elastic_q: queue_.Queue[models.File],
-    log_q: multiprocessing.queues.Queue[typing.Any],
+    log_q: multiprocessing.queues.Queue,
 ) -> None:
     """Scan a single GWS."""
     logger = util.getLogger(__name__, queue=log_q)
@@ -108,7 +107,7 @@ def main() -> None:
 
     queue_log_handler = util.QueueLogger(
         __name__,
-        log_config={"handlers": {"console": {"class": "logging.StreamHandler"}}},
+        log_config={},
     )
 
     # Create or update the index in elasticsearch.
