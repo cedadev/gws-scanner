@@ -53,7 +53,7 @@ def scan_single_gws(
         results += aggregate.aggregate_users(path, config_.scanner["elastic"], volumestats)
         results += aggregate.aggregate_heat(path, config_.scanner["elastic"], volumestats)
     except elasticsearch.exceptions.ConnectionTimeout:
-        logger.error(f"Failed to generate aggregate data for {path}...continuing.")
+        logger.error("Failed to generate aggregate data for %s", path)
     else:
         connection = elastic.get_connection(config_.scanner["elastic"])
         esh.bulk(
@@ -84,7 +84,7 @@ def scan_single_gws(
                 try:
                     search.delete()
                 except elasticsearch.exceptions.ConflictError:
-                    logger.error(f"Failed to delete old data for scan id {oldscan}")
+                    logger.error("Failed to delete old data for scan id %s", oldscan)
                 if scanstatus.status == "complete":
                     scanstatus.status = "removed"
                 elif scanstatus.status == "in_progress":

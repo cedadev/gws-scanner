@@ -26,22 +26,22 @@ def main() -> None:
 
     while True:
         toscan = get_gws_list(config_.scanner["daemon"])
-        logger.info(f"###### Loaded {len(toscan)} paths to scan. ######")
+        logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
             try:
                 os.scandir(gws)
             except FileNotFoundError:
-                logger.warning(f"{gws} does not exist.")
+                logger.warning("%s does not exist.", gws)
             else:
-                logger.info(f"Started scan of {gws}.")
+                logger.info("Started scan of %s.", gws)
                 try:
                     scan_single.scan_single_gws(
                         gws, config_, elastic_q.queue, queue_log_handler.queue
                     )
                 except errors.AbortError as err:
                     logger.error(
-                        f"Scan of {gws} aborted due to an error in another process. Skipping."
+                        "Scan of %s aborted due to an error in another process. Skipping.", gws
                     )
                     if fail_count >= config_.scanner["daemon"]["fail_threshold"]:
                         logger.critical("Failure threshold reached. The process will exit.")
@@ -49,12 +49,17 @@ def main() -> None:
                         raise errors.AbortScanError from err
                     fail_count += 1
                     logger.error(
-                        'There have been {fail_count} failures, so far, will exit at {config_.scanner["daemon"]["fail_threshold"]}'
+                        "There have been %s failures, so far, will exit at %s",
+                        fail_count,
+                        config_.scanner["daemon"]["fail_threshold"],
                     )
                 else:
                     total_successful_scans += 1
                     logger.info(
-                        f"Successfully scanned {gws}. {len(toscan)} left. {total_successful_scans} scans completed in total."
+                        "Successfully scanned %s. %s left. %s scans completed in total.",
+                        gws,
+                        len(toscan),
+                        total_successful_scans,
                     )
                     fail_count = 0
 
