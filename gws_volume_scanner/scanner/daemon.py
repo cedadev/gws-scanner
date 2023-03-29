@@ -25,7 +25,7 @@ def main() -> None:
     total_successful_scans = 0
 
     while True:
-        toscan = get_gws_list(config_.scanner["daemon"])
+        toscan = list(reversed(get_gws_list(config_.scanner["daemon"])))
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
@@ -33,6 +33,8 @@ def main() -> None:
                 os.scandir(gws)
             except FileNotFoundError:
                 logger.warning("%s does not exist.", gws)
+            except PermissionError:
+                logger.warning("PermissionError when accessing %s", gws)
             else:
                 logger.info("Started scan of %s.", gws)
                 try:
