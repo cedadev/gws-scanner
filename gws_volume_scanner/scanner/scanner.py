@@ -97,6 +97,9 @@ def worker(
             ) = inqueue.get(timeout=10)
         except queue_.Empty:
             continue
+        except OSError:
+            abort.set()
+            break
 
         folder = models.File(dirpath, start_timestamp, scan_id)
 
