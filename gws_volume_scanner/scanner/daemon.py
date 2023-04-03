@@ -32,8 +32,10 @@ def main() -> None:
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
 
-            if not should_scan(gws, config_):
-                logger.warning("%s has been scanned within max_scan_interval_days, skipping scan.")
+            if not should_scan(gws, config_.scanner):
+                logger.warning(
+                    "%s has been scanned within max_scan_interval_days, skipping scan.", gws
+                )
                 continue
 
             try:
@@ -110,11 +112,12 @@ def should_scan(path: str, config_: config.ScannerSchema) -> bool:
     last_scan_info = queries.latest_scan_info(path, config_["elastic"]["volume_index_name"])
     if last_scan_info is None:
         return True
-    next_scan_allowed = dt.datetime.fromisoformat(last_scan_info["end_timestamp"]) + dt.timedelta(
-        days=config_["daemon"]["max_scan_interval_days"]
-    )
-    if next_scan_allowed > dt.datetime.now():
-        return False
+    if last_scan_info["status"] == "complete":
+        next_scan_allowed = dt.datetime.fromisoformat(
+            last_scan_info["end_timestamp"]
+        ) + dt.timedelta(days=config_["daemon"]["max_scan_interval_days"])
+        if next_scan_allowed > dt.datetime.now():
+            return False
     return True
 
 
