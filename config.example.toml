@@ -29,6 +29,7 @@ scopes = [
 token_endpoint = ""
 services_endpoint = ""
 
+max_scan_interval_days = 5
 
 [gws.overrides]
 ### Overrides table sets limits for all GWSs.

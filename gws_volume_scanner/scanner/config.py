@@ -35,6 +35,8 @@ class DaemonSchema(typing.TypedDict):
     token_endpoint: str
     services_endpoint: str
 
+    max_scan_interval_days: int
+
 
 class ScannerSchema(typing.TypedDict):
     """Schema for configuration of the sanner itself."""

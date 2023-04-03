@@ -1,9 +1,11 @@
 """Continuously scan all GWSes."""
+import datetime as dt
 import os
 import pathlib
 
 import authlib.integrations.httpx_client
 
+from ..client import queries
 from . import cli, config, elastic, errors, scan_single, util
 
 
@@ -29,6 +31,11 @@ def main() -> None:
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
+
+            if not should_scan(gws, config_):
+                logger.warning("%s has been scanned within max_scan_interval_days, skipping scan.")
+                continue
+
             try:
                 os.scandir(gws)
             except FileNotFoundError:
@@ -96,6 +103,19 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
                     sanitized = str(pathlib.PurePath(req["location"]))
                     services.append(sanitized)
     return services
+
+
+def should_scan(path: str, config_: config.ScannerSchema) -> bool:
+    """Check if a GWS should be scanned."""
+    last_scan_info = queries.latest_scan_info(path, config_["elastic"]["volume_index_name"])
+    if last_scan_info is None:
+        return True
+    next_scan_allowed = dt.datetime.fromisoformat(last_scan_info["end_timestamp"]) + dt.timedelta(
+        days=config_["daemon"]["max_scan_interval_days"]
+    )
+    if next_scan_allowed > dt.datetime.now():
+        return False
+    return True
 
 
 if __name__ == "__main__":

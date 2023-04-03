@@ -56,6 +56,16 @@ def latest_scan_id(path: str, index: str) -> typing.Optional[str]:
     return None
 
 
+def latest_scan_info(path: str, index: str) -> typing.Optional[dict[str, typing.Any]]:
+    """Return the whole scan object for a filepath."""
+    all_scans = scans(path, index)["hits"]["hits"]
+    if all_scans:
+        result: dict[str, typing.Any] = all_scans[0]["_source"]
+        result["id"] = all_scans[0]["_id"]
+        return result
+    return None
+
+
 def scan_ids(path: str, index: str) -> typing.Optional[typing.List[str]]:
     """Return all scan_ids for a filepath, not including parent paths."""
     search = esd.Search(index=index)
