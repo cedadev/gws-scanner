@@ -37,6 +37,9 @@ class DaemonSchema(typing.TypedDict):
 
     max_scan_interval_days: int
 
+    extra_to_scan: list[str]
+    never_scan: list[str]
+
 
 class ScannerSchema(typing.TypedDict):
     """Schema for configuration of the sanner itself."""

@@ -31,6 +31,9 @@ services_endpoint = ""
 
 max_scan_interval_days = 5
 
+extra_to_scan = []
+never_scan = []
+
 [gws.overrides]
 ### Overrides table sets limits for all GWSs.
 aggregate_subdir_names = [

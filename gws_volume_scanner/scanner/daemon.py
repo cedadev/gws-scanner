@@ -8,16 +8,16 @@ import authlib.integrations.httpx_client
 from ..client import queries
 from . import cli, config, elastic, errors, scan_single, util
 
+queue_log_handler = util.QueueLogger(
+    __name__,
+    log_config={},
+)
+logger = util.getLogger(__name__, queue=queue_log_handler.queue)
+
 
 def main() -> None:
     args = cli.parse_daemon_args()
     config_ = config.ScannerConfig(args.config_file)
-
-    queue_log_handler = util.QueueLogger(
-        __name__,
-        log_config={},
-    )
-    logger = util.getLogger(__name__, queue=queue_log_handler.queue)
 
     # Create or update the index in elasticsearch.
     elastic.init(config_.scanner["elastic"])
@@ -27,15 +27,19 @@ def main() -> None:
     total_successful_scans = 0
 
     while True:
-        toscan = list(reversed(get_gws_list(config_.scanner["daemon"])))
+        toscan = list(
+            set(
+                reversed(
+                    get_gws_list(config_.scanner["daemon"])
+                    + config_.scanner["daemon"]["extra_to_scan"]
+                )
+            )
+        )
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
 
             if not should_scan(gws, config_.scanner):
-                logger.warning(
-                    "%s has been scanned within max_scan_interval_days, skipping scan.", gws
-                )
                 continue
 
             try:
@@ -109,15 +113,24 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
 
 def should_scan(path: str, config_: config.ScannerSchema) -> bool:
     """Check if a GWS should be scanned."""
+    if path in config_["daemon"]["never_scan"]:
+        logger.warning("%s is in the never scan list, skipping scan.", path)
+        return False
+
     last_scan_info = queries.latest_scan_info(path, config_["elastic"]["volume_index_name"])
     if last_scan_info is None:
         return True
+
     if last_scan_info["status"] == "complete":
         next_scan_allowed = dt.datetime.fromisoformat(
             last_scan_info["end_timestamp"]
         ) + dt.timedelta(days=config_["daemon"]["max_scan_interval_days"])
         if next_scan_allowed > dt.datetime.now():
+            logger.warning(
+                "%s has been scanned within max_scan_interval_days, skipping scan.", path
+            )
             return False
+
     return True
 
 
