@@ -28,14 +28,7 @@ def main() -> None:
     total_successful_scans = 0
 
     while True:
-        toscan = list(
-            set(
-                reversed(
-                    get_gws_list(config_.scanner["daemon"])
-                    + config_.scanner["daemon"]["extra_to_scan"]
-                )
-            )
-        )
+        toscan = get_gws_list(config_.scanner["daemon"])
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
@@ -99,8 +92,8 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
         headers={"Accept": "application/json"},
     ).json()
 
-    services: list[str] = []
-    for service in projects_services:
+    services: list[str] = daemon_config["extra_to_scan"]
+    for service in reversed(projects_services):
         # Only look for group workspaces.
         if service["category"] == 1:
             for req in service["requirements"]:
@@ -108,16 +101,16 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
                 if req["location"].startswith("/"):
                     # This will remove any double or trailing slashes.
                     sanitized = str(pathlib.PurePath(req["location"]))
-                    services.append(sanitized)
+                    # Remove duplicates any anything in the never_scan list.
+                    if (sanitized not in services) and (
+                        sanitized not in daemon_config["never_scan"]
+                    ):
+                        services.append(sanitized)
     return services
 
 
 def should_scan(path: str, config_: config.ScannerSchema, logger: logging.Logger) -> bool:
     """Check if a GWS should be scanned."""
-    if path in config_["daemon"]["never_scan"]:
-        logger.warning("%s is in the never scan list, skipping scan.", path)
-        return False
-
     last_scan_info = queries.latest_scan_info(path, config_["elastic"]["volume_index_name"])
     if last_scan_info is None:
         return True
