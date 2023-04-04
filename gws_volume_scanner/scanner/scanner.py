@@ -101,7 +101,11 @@ def worker(
             abort.set()
             break
 
-        folder = models.File(dirpath, start_timestamp, scan_id)
+        try:
+            folder = models.File(dirpath, start_timestamp, scan_id)
+        except OSError:
+            abort.set()
+            break
 
         if walk_items:
             for file in filenames:

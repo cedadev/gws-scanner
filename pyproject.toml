@@ -10,7 +10,7 @@ authors = ["Matt Jones <matthew.j.jones@stfc.ac.uk>", "Alex Manning <alexander.m
 license = "BSD - see LICENSE file in top-level package directory"
 
 [tool.poetry.dependencies]
-python = '^3.8'
+python = '^3.10'
 elasticsearch-dsl = "^7.4.0"
 elasticsearch = {version = "^7.17.0", optional = true}
 tomli = {version = "^2.0.1", optional = true}
