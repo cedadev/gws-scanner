@@ -1,5 +1,6 @@
 """Continuously scan all GWSes."""
 import datetime as dt
+import logging
 import os
 import pathlib
 
@@ -8,16 +9,16 @@ import authlib.integrations.httpx_client
 from ..client import queries
 from . import cli, config, elastic, errors, scan_single, util
 
-queue_log_handler = util.QueueLogger(
-    __name__,
-    log_config={},
-)
-logger = util.getLogger(__name__, queue=queue_log_handler.queue)
-
 
 def main() -> None:
     args = cli.parse_daemon_args()
     config_ = config.ScannerConfig(args.config_file)
+
+    queue_log_handler = util.QueueLogger(
+        __name__,
+        log_config={},
+    )
+    logger = util.getLogger(__name__, queue=queue_log_handler.queue)
 
     # Create or update the index in elasticsearch.
     elastic.init(config_.scanner["elastic"])
@@ -39,7 +40,7 @@ def main() -> None:
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
 
-            if not should_scan(gws, config_.scanner):
+            if not should_scan(gws, config_.scanner, logger):
                 continue
 
             try:
@@ -111,7 +112,7 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
     return services
 
 
-def should_scan(path: str, config_: config.ScannerSchema) -> bool:
+def should_scan(path: str, config_: config.ScannerSchema, logger: logging.Logger) -> bool:
     """Check if a GWS should be scanned."""
     if path in config_["daemon"]["never_scan"]:
         logger.warning("%s is in the never scan list, skipping scan.", path)
