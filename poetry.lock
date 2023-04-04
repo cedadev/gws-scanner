@@ -245,9 +245,9 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 scanner = ["tomli", "typeguard", "elasticsearch", "authlib", "httpx"]
 
 [metadata]
-content-hash = "2d70a84112b7d514ceeab160b5b873bc67022542bb1684a3b3efcb539d17b1c9"
+content-hash = "095852d10bbb4248f672795ee14e70e51d5820ec1f9ef91cd2d67740c63235b5"
 lock-version = "1.0"
-python-versions = '^3.10'
+python-versions = '^3.9'
 
 [metadata.files]
 anyio = []
