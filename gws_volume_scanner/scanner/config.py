@@ -40,6 +40,8 @@ class DaemonSchema(typing.TypedDict):
     extra_to_scan: list[str]
     never_scan: list[str]
 
+    logging_config: dict[str, typing.Any]
+
 
 class ScannerSchema(typing.TypedDict):
     """Schema for configuration of the sanner itself."""

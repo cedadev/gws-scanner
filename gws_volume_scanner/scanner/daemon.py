@@ -16,7 +16,7 @@ def main() -> None:
 
     queue_log_handler = util.QueueLogger(
         __name__,
-        log_config={},
+        log_config=config_.scanner["daemon"]["logging_config"],
     )
     logger = util.getLogger(__name__, queue=queue_log_handler.queue)
 
