@@ -90,7 +90,7 @@ class ScannerConfig:
 
         # Check that the scanner config is what we expect.
         try:
-            typeguard.check_type("config", toml_dict, MainConfigSchema)
+            typeguard.check_type(toml_dict, MainConfigSchema)
         except TypeError as err:
             raise errors.ScannerMainConfigError from err
 
@@ -115,7 +115,7 @@ class ScannerConfig:
             with open(configpath, "rb") as thefile:
                 user_dict = typing.cast(GWSConfigSchema, tomli.load(thefile))
             try:
-                typeguard.check_type("config", user_dict, GWSConfigSchema)
+                typeguard.check_type(user_dict, GWSConfigSchema)
             except TypeError as err:
                 raise errors.ScannerGWSConfigError from err
 
