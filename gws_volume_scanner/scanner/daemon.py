@@ -14,6 +14,7 @@ def main() -> None:
     args = cli.parse_daemon_args()
     config_ = config.ScannerConfig(args.config_file)
 
+    logging.addLevelName(100, "NOTIFY")
     queue_log_handler = util.QueueLogger(
         __name__,
         log_config=config_.scanner["daemon"]["logging_config"],
@@ -39,7 +40,7 @@ def main() -> None:
             try:
                 os.scandir(gws)
             except FileNotFoundError:
-                logger.warning("%s does not exist.", gws)
+                logger.log(100, "%s does not exist.", gws)
             except PermissionError:
                 logger.warning("PermissionError when accessing %s", gws)
             else:
