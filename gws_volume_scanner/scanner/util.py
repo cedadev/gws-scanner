@@ -171,3 +171,12 @@ def getLogger(
     logger.propagate = False
     logger.addHandler(queue_handler)
     return logger
+
+
+class FilterInfo(logging.Filter):
+    """Log filter to filter only records where level==100"""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno == 100:
+            return True
+        return False
