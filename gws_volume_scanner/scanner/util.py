@@ -173,7 +173,7 @@ def getLogger(
     return logger
 
 
-class FilterInfo(logging.Filter):
+class FilterNotify(logging.Filter):
     """Log filter to filter only records where level==100"""
 
     def filter(self, record: logging.LogRecord) -> bool:

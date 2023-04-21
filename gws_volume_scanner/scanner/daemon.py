@@ -98,8 +98,9 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
         # Only look for group workspaces.
         if service["category"] == 1:
             for req in service["requirements"]:
+                # Only provisioned requrests should be scanned, they have a status of 50.
                 # If it doesn't start with a / it's probably not a path.
-                if req["location"].startswith("/"):
+                if req["status"] == 50 and req["location"].startswith("/"):
                     # This will remove any double or trailing slashes.
                     sanitized = str(pathlib.PurePath(req["location"]))
                     # Remove duplicates any anything in the never_scan list.
