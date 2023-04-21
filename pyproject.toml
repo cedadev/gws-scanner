@@ -17,9 +17,10 @@ tomli = {version = "^2.0.1", optional = true}
 typeguard = {version = "^3.0.2", optional = true}
 authlib = {version = "^1.2.0", optional = true}
 httpx = {version = "^0.24.0", optional = true}
+sdnotify = {version="^0.3.2", optional = true}
 
 [tool.poetry.extras]
-scanner = ["tomli", "typeguard", "elasticsearch", "authlib", "httpx"]
+scanner = ["tomli", "typeguard", "elasticsearch", "authlib", "httpx", "sdnotify"]
 
 [tool.poetry.scripts]
 scan_single = 'gws_volume_scanner.scanner.scan_single:main'

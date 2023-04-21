@@ -5,12 +5,15 @@ import os
 import pathlib
 
 import authlib.integrations.httpx_client
+import sdnotify
 
 from ..client import queries
 from . import cli, config, elastic, errors, scan_single, util
 
 
 def main() -> None:
+    system_notify = sdnotify.SystemdNotifier()
+
     args = cli.parse_daemon_args()
     config_ = config.ScannerConfig(args.config_file)
 
@@ -31,6 +34,8 @@ def main() -> None:
     while True:
         toscan = get_gws_list(config_.scanner["daemon"])
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
+        system_notify.notify("READY=1")
+
         while toscan:
             gws = toscan.pop().strip().rstrip("/")
 
