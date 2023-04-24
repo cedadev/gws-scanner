@@ -32,6 +32,7 @@ def entrypoint() -> None:
     elastic_q = util.ElasticQueueWorker(config_.scanner)
 
     # Startup tasks complete.
+    system_notify.notify(f"MAINPID={os.getpid()}")
     system_notify.notify("READY=1")
     try:
         main(system_notify, args, config_, elastic_q, queue_log_handler)
