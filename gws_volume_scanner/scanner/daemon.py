@@ -1,42 +1,73 @@
 """Continuously scan all GWSes."""
+import argparse
 import datetime as dt
 import logging
 import os
 import pathlib
 
 import authlib.integrations.httpx_client
+import httpx
 import sdnotify
 
 from ..client import queries
 from . import cli, config, elastic, errors, scan_single, util
 
 
-def main() -> None:
+def entrypoint() -> None:
+    """Create long-running queues and ensure they are always gracefully terminated."""
     system_notify = sdnotify.SystemdNotifier()
 
     args = cli.parse_daemon_args()
     config_ = config.ScannerConfig(args.config_file)
 
+    # Setup logging.
     logging.addLevelName(100, "NOTIFY")
     queue_log_handler = util.QueueLogger(
         __name__,
         log_config=config_.scanner["daemon"]["logging_config"],
     )
-    logger = util.getLogger(__name__, queue=queue_log_handler.queue)
 
     # Create or update the index in elasticsearch.
     elastic.init(config_.scanner["elastic"])
     elastic_q = util.ElasticQueueWorker(config_.scanner)
 
+    # Startup tasks complete.
+    system_notify.notify("READY=1")
+    try:
+        main(system_notify, args, config_, elastic_q, queue_log_handler)
+    finally:
+        # Make sure that the queues always get cleanly shutdown on any exception.
+        # This is the reason for having a seperate setup() function.
+        system_notify.notify("STOPPING=1")
+        elastic_q.shutdown()
+        queue_log_handler.shutdown()
+
+
+def main(
+    system_notify: sdnotify.SystemdNotifier,
+    args: argparse.Namespace,
+    config_: config.ScannerConfig,
+    elastic_q: util.ElasticQueueWorker,
+    queue_log_handler: util.QueueLogger,
+) -> None:
+    """Scan GWSs forever in a loop."""
+    logger = util.getLogger(__name__, queue=queue_log_handler.queue)
+
     fail_count = 0
     total_successful_scans = 0
 
     while True:
-        toscan = get_gws_list(config_.scanner["daemon"])
+        try:
+            toscan = get_gws_list(config_.scanner["daemon"])
+        except httpx.RequestError:
+            break
+
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
-        system_notify.notify("READY=1")
 
         while toscan:
+            # Tell systemd we are still alive every loop.
+            system_notify.notify("WATCHDOG=1")
+
             gws = toscan.pop().strip().rstrip("/")
 
             if not should_scan(gws, config_.scanner, logger):
@@ -60,7 +91,7 @@ def main() -> None:
                     )
                     if fail_count >= config_.scanner["daemon"]["fail_threshold"]:
                         logger.critical("Failure threshold reached. The process will exit.")
-                        elastic_q.shutdown()
+                        system_notify.notify("WATCHDOG=trigger")
                         raise errors.AbortScanError from err
                     fail_count += 1
                     logger.error(
@@ -81,9 +112,6 @@ def main() -> None:
         if not args.run_forever:
             break
 
-    elastic_q.shutdown()
-    queue_log_handler.shutdown()
-
 
 def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
     """Get a list of paths to scan from the projects portal."""
@@ -91,6 +119,7 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
         daemon_config["client_id"],
         daemon_config["client_secret"],
         scope=" ".join(daemon_config["scopes"]),
+        transport=httpx.HTTPTransport(retries=30),
     )
     client.fetch_token(daemon_config["token_endpoint"], grant_type="client_credentials")
     projects_services = client.get(
@@ -136,4 +165,4 @@ def should_scan(path: str, config_: config.ScannerSchema, logger: logging.Logger
 
 
 if __name__ == "__main__":
-    main()
+    entrypoint()
