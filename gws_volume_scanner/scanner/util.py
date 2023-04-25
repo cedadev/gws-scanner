@@ -149,7 +149,7 @@ class ScanQueueWorker:
 
 
 class QueueLogger:
-    def __init__(self, name: typing.Optional[str] = None, *, log_config):
+    def __init__(self, name: typing.Optional[str] = None, *, log_config: dict[str, typing.Any]):
         log_config = constants.DEFAULT_LOGGING_CONFIG | log_config
         self.queue: multiprocessing.queues.Queue = mp.Queue()  # type: ignore[type-arg]
         logging.config.dictConfig(log_config)

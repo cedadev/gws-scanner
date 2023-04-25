@@ -2,6 +2,7 @@
 import multiprocessing as mp
 import multiprocessing.queues
 import queue as queue_
+import typing
 
 import elasticsearch.exceptions
 import elasticsearch.helpers as esh
@@ -15,7 +16,7 @@ def scan_single_gws(
     path: str,
     config_: config.ScannerConfig,
     elastic_q: queue_.Queue[models.File],
-    log_q: multiprocessing.queues.Queue,
+    log_q: multiprocessing.queues.Queue[typing.Any],
 ) -> None:
     """Scan a single GWS."""
     logger = util.getLogger(__name__, queue=log_q)
