@@ -16,7 +16,7 @@ def scan_single_gws(
     path: str,
     config_: config.ScannerConfig,
     elastic_q: queue_.Queue[models.File],
-    log_q: multiprocessing.queues.Queue[typing.Any],
+    log_q: queue_.Queue[typing.Any],
 ) -> None:
     """Scan a single GWS."""
     logger = util.getLogger(__name__, queue=log_q)

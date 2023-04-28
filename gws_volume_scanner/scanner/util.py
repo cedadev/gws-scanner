@@ -151,7 +151,7 @@ class ScanQueueWorker:
 class QueueLogger:
     def __init__(self, name: typing.Optional[str] = None, *, log_config: dict[str, typing.Any]):
         log_config = constants.DEFAULT_LOGGING_CONFIG | log_config
-        self.queue: multiprocessing.queues.Queue = mp.Queue()  # type: ignore[type-arg]
+        self.queue: queue_.Queue[typing.Any] = mp.Queue()
         logging.config.dictConfig(log_config)
         logger = logging.getLogger()
         self.listener = logging.handlers.QueueListener(self.queue, *logger.handlers)
@@ -161,9 +161,8 @@ class QueueLogger:
         self.listener.stop()
 
 
-# The type of this should be multiprocessing.queues.JoinableQueue[T] but that breaks at runtime.
 def getLogger(
-    name: typing.Optional[str] = None, *, queue: multiprocessing.queues.Queue  # type: ignore[type-arg]
+    name: typing.Optional[str] = None, *, queue: queue_.Queue[typing.Any]
 ) -> logging.Logger:
     """Return a logger which will pass all items up to a QueueHandler."""
     queue_handler = logging.handlers.QueueHandler(queue)
