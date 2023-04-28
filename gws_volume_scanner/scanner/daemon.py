@@ -4,6 +4,7 @@ import datetime as dt
 import logging
 import os
 import pathlib
+import time
 
 import authlib.integrations.httpx_client
 import httpx
@@ -58,6 +59,7 @@ def main(
     total_successful_scans = 0
 
     while True:
+        scan_started_at = dt.datetime.now()
         try:
             toscan = get_gws_list(config_.scanner["daemon"])
         except httpx.RequestError:
@@ -112,6 +114,12 @@ def main(
 
         if not args.run_forever:
             break
+
+        # If all the GWSs have been scanned recently, sleep for a while.
+        if scan_started_at + dt.timedelta(minutes=5) < dt.datetime.now():
+            logger.info("Scan of all GWSs finished very rapidly, sleeping for a while.")
+            system_notify.notify("WATCHDOG=1")
+            time.sleep(3600)
 
 
 def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
