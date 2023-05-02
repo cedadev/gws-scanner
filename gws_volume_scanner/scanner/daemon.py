@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import time
+import typing
 
 import authlib.integrations.httpx_client
 import httpx
@@ -73,8 +74,22 @@ def main(
 
             gws = toscan.pop().strip().rstrip("/")
 
-            if not should_scan(gws, config_.scanner, logger):
+            last_scan_info = queries.latest_scan_info(
+                gws, config_.scanner["elastic"]["volume_index_name"]
+            )
+            if not should_scan(gws, config_.scanner, logger, last_scan_info):
                 continue
+
+            # Give the systemd watchdog an idea of how long this will take so that if it's
+            # longer the scanner can be killed.
+            if last_scan_info:
+                predicted_time = last_scan_info.get("length", 259200)
+            else:
+                predicted_time = 259200
+            time_allowed = int(predicted_time * 1.5)
+            system_notify.notify("WATCHDOG=1")
+            system_notify.notify(f"WATCHDOG_USEC={time_allowed}")
+            system_notify.notify("WATCHDOG=1")
 
             try:
                 os.scandir(gws)
@@ -154,9 +169,13 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
     return services
 
 
-def should_scan(path: str, config_: config.ScannerSchema, logger: logging.Logger) -> bool:
+def should_scan(
+    path: str,
+    config_: config.ScannerSchema,
+    logger: logging.Logger,
+    last_scan_info: typing.Optional[dict[str, typing.Any]],
+) -> bool:
     """Check if a GWS should be scanned."""
-    last_scan_info = queries.latest_scan_info(path, config_["elastic"]["volume_index_name"])
     if last_scan_info is None:
         return True
 
