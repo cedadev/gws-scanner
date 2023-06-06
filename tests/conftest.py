@@ -1,6 +1,7 @@
 """Test configuration and global fixtures."""
 # nosec
 import mimetypes
+import os
 import pathlib
 import random
 import string
@@ -48,7 +49,7 @@ def create_subtree(
             extension = random.choice(list(mimetypes.types_map.keys()))
             filename = path / (foldername + extension)
             with open(filename, "wb") as thefile:
-                thefile.truncate(random.randint(1, max_size))
+                thefile.write(os.urandom(random.randint(1, max_size)))
             files.add(filename)
     return (folders, files)
 

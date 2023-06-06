@@ -24,7 +24,7 @@ def simple_path_walk(path: pathlib.Path) -> models.File:
 def test_single_file_size(file_tree: conftest.FileTestTreeInfo) -> None:
     """Test that a single file's size is correctly identified."""
     file = random.choice(list(file_tree[2]))
-    duresult = int(sp.run(["du", "-b", file], capture_output=True, check=True).stdout.split()[0])
+    duresult = int(sp.run(["du", "-B1", file], capture_output=True, check=True).stdout.split()[0])
     fileobj = models.File(str(file), dt.datetime.now(), "test_scan_id")
     assert fileobj.size == duresult
 
@@ -32,7 +32,9 @@ def test_single_file_size(file_tree: conftest.FileTestTreeInfo) -> None:
 def test_whole_tree_size(file_tree: conftest.FileTestTreeInfo) -> None:
     """Do a simple walk of the tree adding all children and check the size is the same as du."""
     path = file_tree[0]
-    duresult = int(sp.run(["du", "-bs", path], capture_output=True, check=True).stdout.split()[0])
+    duresult = int(
+        sp.run(["du", "-B1", "-s", path], capture_output=True, check=True).stdout.split()[0]
+    )
     fileobj = simple_path_walk(path)
     assert fileobj.size == duresult
 
