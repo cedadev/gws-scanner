@@ -108,7 +108,12 @@ class File(esd.Document):
                     (str(path).rstrip("/")).encode("utf-8", "surrogateescape").decode("ISO-8859-1")
                 )
 
-                kwargs["size"] = stat_.st_size
+                # The size on disk is the number of blocks multipled by 512 (https://docs.python.org/3/library/os.html#os.stat_result.st_blocks).
+                # Note that the result of st_blocks is unrelated to st_blksize.
+                size_ondisk = stat_.st_blocks * 512
+                # apparent_size = stat_.st_size
+
+                kwargs["size"] = size_ondisk
                 username = categorize.username_from_uid(stat_.st_uid)
                 kwargs["owner"] = username
                 kwargs["count"] = 1
@@ -132,21 +137,21 @@ class File(esd.Document):
                 # Add the values for this object. Children might be agregated later.
                 # Types.
                 kwargs["filetypes"][ftype]["count"] += 1
-                kwargs["filetypes"][ftype]["size"] += stat_.st_size
+                kwargs["filetypes"][ftype]["size"] += size_ondisk
 
                 # Size bins.
-                bin_ = categorize.get_size_bin(stat_.st_size)
+                bin_ = categorize.get_size_bin(size_ondisk)
                 kwargs["size_bins"][bin_]["count"] += 1
-                kwargs["size_bins"][bin_]["size"] += stat_.st_size
+                kwargs["size_bins"][bin_]["size"] += size_ondisk
 
                 # Heat.
                 heat = categorize.get_time_bin(atime)
                 kwargs["heat_bins"][heat]["count"] += 1
-                kwargs["heat_bins"][heat]["size"] += stat_.st_size
+                kwargs["heat_bins"][heat]["size"] += size_ondisk
 
                 # Users.
                 kwargs["users"][username]["count"] += 1
-                kwargs["users"][username]["size"] += stat_.st_size
+                kwargs["users"][username]["size"] += size_ondisk
 
                 # Add a timestamp to the object in elasticsearch.
                 kwargs["start_timestamp"] = start_timestamp
@@ -167,24 +172,29 @@ class File(esd.Document):
             warnings.warn(errors.FileNotFoundWarning(err))
         else:
             with self.__lock:
-                self.size += stat_.st_size
+                # The size on disk is the number of blocks multipled by 512 (https://docs.python.org/3/library/os.html#os.stat_result.st_blocks).
+                # Note that the result of st_blocks is unrelated to st_blksize.
+                size_ondisk = stat_.st_blocks * 512
+                # apparent_size = stat_.st_size
+
+                self.size += size_ondisk
                 self.count += 1
 
                 ftype = categorize.detect_filetype(path, stat_)
                 self.filetypes[ftype]["count"] += 1
-                self.filetypes[ftype]["size"] += stat_.st_size
+                self.filetypes[ftype]["size"] += size_ondisk
 
-                bin_ = categorize.get_size_bin(stat_.st_size)
+                bin_ = categorize.get_size_bin(size_ondisk)
                 self.size_bins[bin_]["count"] += 1
-                self.size_bins[bin_]["size"] += stat_.st_size
+                self.size_bins[bin_]["size"] += size_ondisk
 
                 heat = categorize.get_time_bin(dt.datetime.fromtimestamp(stat_.st_atime))
                 self.heat_bins[heat]["count"] += 1
-                self.heat_bins[heat]["size"] += stat_.st_size
+                self.heat_bins[heat]["size"] += size_ondisk
 
                 username = categorize.username_from_uid(stat_.st_uid)
                 self.users[username]["count"] += 1
-                self.users[username]["size"] += stat_.st_size
+                self.users[username]["size"] += size_ondisk
 
                 # Add this object's age into the mean.
                 atime = dt.datetime.fromtimestamp(stat_.st_atime)
