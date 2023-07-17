@@ -58,6 +58,7 @@ def main(
 
     fail_count = 0
     total_successful_scans = 0
+    last_notify_nonexistent = dt.datetime(1, 1, 1)
 
     while True:
         scan_started_at = dt.datetime.now()
@@ -67,6 +68,7 @@ def main(
             break
 
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
+        non_existent_gws = set()
 
         while toscan:
             # Tell systemd we are still alive every loop.
@@ -94,7 +96,7 @@ def main(
             try:
                 os.scandir(gws)
             except FileNotFoundError:
-                logger.log(100, "%s does not exist.", gws)
+                non_existent_gws.add(gws)
             except PermissionError:
                 logger.warning("PermissionError when accessing %s", gws)
             else:
@@ -127,12 +129,22 @@ def main(
                     )
                     fail_count = 0
 
+        # Don't spam the slack channel with notifications, just send them once a day.
+        if non_existent_gws and (
+            last_notify_nonexistent + dt.timedelta(days=1) < dt.datetime.now()
+        ):
+            for gws in non_existent_gws:
+                logger.log(100, "%s does not exist.", gws)
+            last_notify_nonexistent = dt.datetime.now()
+
         if not args.run_forever:
             break
 
         # If all the GWSs have been scanned recently, sleep for a while.
-        if scan_started_at + dt.timedelta(minutes=5) < dt.datetime.now():
+        if scan_started_at + dt.timedelta(minutes=5) > dt.datetime.now():
             logger.info("Scan of all GWSs finished very rapidly, sleeping for a while.")
+            system_notify.notify("WATCHDOG=1")
+            system_notify.notify("WATCHDOG_USEC=4200")
             system_notify.notify("WATCHDOG=1")
             time.sleep(3600)
 
