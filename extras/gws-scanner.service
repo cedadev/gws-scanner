@@ -1,0 +1,15 @@
+[Unit]
+Description=Group Workspace Scanner
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=432000
+
+Restart=always
+RestartSec=10min
+
+ExecStart=python -u -m gws_volume_scanner.scanner.daemon config.toml --run-forever
+
+[Install]
+WantedBy=multi-user.target
