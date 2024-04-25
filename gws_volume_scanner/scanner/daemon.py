@@ -89,8 +89,8 @@ def main(
                 predicted_time = last_scan_info.get("length", 259200)
             else:
                 predicted_time = 259200
-            # watchdog_usec is in milliseconds.
-            time_allowed = int(predicted_time * 1.5) * 1000
+            # watchdog_usec is in microseconds.
+            time_allowed = int(predicted_time * 1.5) * 1000 * 1000
             system_notify.notify("WATCHDOG=1")
             system_notify.notify(f"WATCHDOG_USEC={time_allowed}")
             system_notify.notify("WATCHDOG=1")
