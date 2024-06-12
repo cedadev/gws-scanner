@@ -66,6 +66,7 @@ def main(
         try:
             toscan = get_gws_list(config_.scanner["daemon"])
         except httpx.RequestError:
+            logger.error("Failed to load paths to scan. Quitting")
             break
 
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
@@ -163,6 +164,7 @@ def get_gws_list(daemon_config: config.DaemonSchema) -> list[str]:
     projects_services = client.get(
         daemon_config["services_endpoint"],
         headers={"Accept": "application/json"},
+        timeout=60,
     ).json()
 
     services: list[str] = daemon_config["extra_to_scan"]
