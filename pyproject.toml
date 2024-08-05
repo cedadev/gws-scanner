@@ -34,7 +34,7 @@ scan_single = 'gws_volume_scanner.scanner.scan_single:main'
 scan_daemon = 'gws_volume_scanner.scanner.daemon:main'
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.2.0"
+mypy = "^1.11.1"
 
 [tool.black]
 line-length = 100
