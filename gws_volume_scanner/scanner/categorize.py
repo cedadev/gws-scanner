@@ -21,6 +21,7 @@ def get_time_bin(datetime: dt.datetime) -> str:
     try:
         result = str(keys[bisect.bisect_right(values, datetime)])
     except IndexError:
+        result = constants.TIME_BUCKETS[0]["key"]
         logger.warning(
             "get_time_bin given datatime which is could not categorise because it's in the future."
         )
