@@ -2,6 +2,7 @@
 
 import bisect
 import datetime as dt
+import logging
 import mimetypes
 import os
 import pwd
@@ -10,12 +11,20 @@ import typing
 
 from .. import constants
 
+logger = logging.getLogger()
+
 
 def get_time_bin(datetime: dt.datetime) -> str:
     """Return the time bin of a file given it's atime."""
     values = [dt.datetime.now() - x["from"] for x in reversed(constants.TIME_BUCKETS)]
     keys = [x["key"] for x in reversed(constants.TIME_BUCKETS)]
-    return str(keys[bisect.bisect_right(values, datetime)])
+    try:
+        result = str(keys[bisect.bisect_right(values, datetime)])
+    except IndexError:
+        logger.warning(
+            "get_time_bin given datatime which is could not categorise because it's in the future."
+        )
+    return result
 
 
 def get_size_bin(size: int) -> str:
