@@ -95,7 +95,7 @@ def main(
             else:
                 predicted_time = 259200
             # watchdog_usec is in microseconds.
-            time_allowed = int(predicted_time * 2) * 1000 * 1000
+            time_allowed = int(predicted_time * 4) * 1000 * 1000
             system_notify.notify("WATCHDOG=1")
             system_notify.notify(f"WATCHDOG_USEC={time_allowed}")
             system_notify.notify("WATCHDOG=1")
