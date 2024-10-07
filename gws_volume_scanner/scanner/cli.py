@@ -28,4 +28,9 @@ def parse_daemon_args() -> argparse.Namespace:
         action="store_true",
         help="Scan all the passes paths continuiously in a loop without quiting.",
     )
+    parser.add_argument(
+        "--shuffle",
+        action="store_true",
+        help="Shuffle list of GWS before scanning.",
+    )
     return parser.parse_args()

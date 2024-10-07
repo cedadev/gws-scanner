@@ -5,6 +5,7 @@ import datetime as dt
 import logging
 import os
 import pathlib
+import random
 import time
 import typing
 
@@ -68,6 +69,9 @@ def main(
         except httpx.RequestError:
             logger.error("Failed to load paths to scan. Quitting")
             break
+
+        if args.shuffle:
+            random.shuffle(toscan)
 
         logger.info("###### Loaded %s paths to scan. ######", len(toscan))
         non_existent_gws = set()
