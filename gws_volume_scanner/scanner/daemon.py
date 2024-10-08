@@ -91,7 +91,7 @@ def main(
             # Give the systemd watchdog an idea of how long this will take so that if it's
             # longer the scanner can be killed.
             if last_scan_info:
-                predicted_time = last_scan_info.get("length", 259200)
+                predicted_time = max(259200, last_scan_info.get("length", 259200))
             else:
                 predicted_time = 259200
             # watchdog_usec is in microseconds.
