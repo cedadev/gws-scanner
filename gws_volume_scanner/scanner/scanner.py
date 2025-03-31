@@ -22,7 +22,7 @@ def queuescan(
     start_timestamp: dt.datetime,
     scan_id: str,
     abort: multiprocessing.synchronize.Event,
-    exclude_path_prefixes: tuple[str],
+    exclude_path_prefixes: tuple[str, ...],
 ) -> None:
     """Walk the given path and places objects to scan in a queue."""
     gwsconfig = config_.gws_config(str(path))

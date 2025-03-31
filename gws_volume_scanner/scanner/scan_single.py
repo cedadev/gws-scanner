@@ -33,8 +33,9 @@ def scan_single_gws(
 
     # PURE filesystems keep disk snapshots in a folder called
     # .snapshots. This confuses the user and the scanner so we shouldn't scan them.
+    exclude_path_prefixes = []
     if volumestats.fs_type == "nfs":
-        exclude_path_prefixes = (".snapshot",)
+        exclude_path_prefixes.append(".snapshot")
 
     # Add paths into the queue for processing.
     scanner.queuescan(
@@ -44,7 +45,7 @@ def scan_single_gws(
         volumestats.start_timestamp,
         volumestats.meta.id,
         abort,
-        exclude_path_prefixes,
+        tuple(exclude_path_prefixes),
     )
 
     # Shutdown workers.
