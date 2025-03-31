@@ -1,4 +1,5 @@
 """Scan a single GWS."""
+
 import multiprocessing as mp
 import multiprocessing.queues
 import queue as queue_
@@ -30,6 +31,11 @@ def scan_single_gws(
     volumestats.add_volume_information()
     volumestats.save()
 
+    # PURE filesystems keep disk snapshots in a folder called
+    # .snapshots. This confuses the user and the scanner so we shouldn't scan them.
+    if volumestats.fs_type == "nfs":
+        exclude_path_prefixes = (".snapshot",)
+
     # Add paths into the queue for processing.
     scanner.queuescan(
         path,
@@ -38,6 +44,7 @@ def scan_single_gws(
         volumestats.start_timestamp,
         volumestats.meta.id,
         abort,
+        exclude_path_prefixes,
     )
 
     # Shutdown workers.

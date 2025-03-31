@@ -1,4 +1,5 @@
 """Elasticsearch Model for the GWS Scanner."""
+
 import collections
 import datetime as dt
 import multiprocessing as mp

@@ -1,4 +1,5 @@
 """Module which does the scanning of the filesystem."""
+
 import copy
 import datetime as dt
 import multiprocessing as mp
@@ -21,12 +22,19 @@ def queuescan(
     start_timestamp: dt.datetime,
     scan_id: str,
     abort: multiprocessing.synchronize.Event,
+    exclude_path_prefixes: tuple[str],
 ) -> None:
     """Walk the given path and places objects to scan in a queue."""
     gwsconfig = config_.gws_config(str(path))
 
     # Because we vendor the os module, it's type hints do not get picked up by mypy.
     for dirpath, dirnames, filenames in vos.walk(path):  # type: ignore[no-untyped-call]
+        # Directories and subdirectories with exclude_path_prefixes set are
+        # Completely exlcluded from the scan
+        if dirpath.removeprefix(str(path)).lstrip("/").startswith(exclude_path_prefixes):
+            dirnames.clear()  # Remove subdirecories from future steps in the walk.
+            continue
+
         depth = len(dirpath.removeprefix(str(path)).strip("/").split("/"))
 
         walk_items = dirpath in gwsconfig["full_item_walk_dirs"]
