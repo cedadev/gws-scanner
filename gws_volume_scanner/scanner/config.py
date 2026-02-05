@@ -17,7 +17,6 @@ class ElasticSchema(typing.TypedDict):
     volume_index_name: str
     aggregate_index_name: str
 
-    ca_certs: str
     use_ssl: bool
     hosts: typing.List[str]
     timeout: int
