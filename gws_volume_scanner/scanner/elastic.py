@@ -88,15 +88,10 @@ def get_connection(config_: config.ElasticSchema) -> typing.Any:
         alias="default",
         hosts=config_["hosts"],
         use_ssl=config_["use_ssl"],
-        ca_certs=config_["ca_certs"],
         timeout=config_["timeout"],
         retry_on_timeout=True,
         max_retries=10,
         headers={"x-api-key": config_["api_key"]},
-        sniff_on_start=True,
-        sniffer_timeout=60,
-        sniff_on_connection_fail=True,
-        snif_timeout=10,
     )
     return esd.connections.get_connection()
 
