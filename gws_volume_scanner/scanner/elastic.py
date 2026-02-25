@@ -19,7 +19,10 @@ def init(elastic_config: config.ElasticSchema) -> None:
         elastic_config["data_index_name"],
         models.File,
         conn,
-        index_settings={"mapping.total_fields.limit": 10000},
+        index_settings={
+            "number_of_shards": 8,
+            "mapping.total_fields.limit": 10000
+        },
     )
     ensure_index(elastic_config["volume_index_name"], models.Volume, conn)
     ensure_index(elastic_config["aggregate_index_name"], models.GranularRecord, conn)
