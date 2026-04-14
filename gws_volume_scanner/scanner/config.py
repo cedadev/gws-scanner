@@ -1,4 +1,5 @@
 """GWS Scanner configuration loading and parsing."""
+
 import os
 import typing
 
@@ -20,7 +21,8 @@ class ElasticSchema(typing.TypedDict):
     use_ssl: bool
     hosts: typing.List[str]
     timeout: int
-    api_key: str
+    username: str
+    password: str
 
 
 class DaemonSchema(typing.TypedDict):
