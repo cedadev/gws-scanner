@@ -5,9 +5,9 @@ import multiprocessing.queues
 import queue as queue_
 import typing
 
+import elasticsearch.dsl as esd
 import elasticsearch.exceptions
 import elasticsearch.helpers as esh
-import elasticsearch_dsl as esd
 
 from ..client import queries
 from . import aggregate, cli, config, elastic, errors, models, scanner, util

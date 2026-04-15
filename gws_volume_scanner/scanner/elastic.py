@@ -1,12 +1,13 @@
 """Module which sends data to elasticsearch."""
+
 import datetime as dt
 import multiprocessing as mp
 import queue as queue_
 import threading as th
 import typing
 
+import elasticsearch.dsl as esd
 import elasticsearch.helpers as esh
-import elasticsearch_dsl as esd
 
 from . import config, models, util
 
@@ -21,7 +22,7 @@ def init(elastic_config: config.ElasticSchema) -> None:
         conn,
         index_settings={
             "number_of_shards": 8,
-            "mapping.total_fields.limit": 10000
+            "mapping.total_fields.limit": 10000,
         },
     )
     ensure_index(elastic_config["volume_index_name"], models.Volume, conn)
@@ -94,7 +95,7 @@ def get_connection(config_: config.ElasticSchema) -> typing.Any:
         timeout=config_["timeout"],
         retry_on_timeout=True,
         max_retries=10,
-        headers={"x-api-key": config_["api_key"]},
+        basic_auth=(config_["username"], config_["password"]),
     )
     return esd.connections.get_connection()
 

@@ -7,7 +7,7 @@ import os
 import typing
 import warnings
 
-import elasticsearch_dsl as esd
+import elasticsearch.dsl as esd
 
 from ..client import queries
 from . import categorize, errors

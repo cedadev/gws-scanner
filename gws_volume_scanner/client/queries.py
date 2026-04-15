@@ -1,8 +1,9 @@
 """Queries for filesystem data in elasticsearch."""
+
 import copy
 import typing
 
-import elasticsearch_dsl as esd
+import elasticsearch.dsl as esd
 
 from .. import constants
 

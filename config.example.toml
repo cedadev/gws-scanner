@@ -11,7 +11,8 @@ data_index_name = "gws-scandata"
 aggregate_index_name = "gws-aggdata"
 volume_index_name = "gws-volumestats"
 
-api_key = ""
+username = ""
+password = ""
 ca_certs = ""
 use_ssl = false
 hosts = [
