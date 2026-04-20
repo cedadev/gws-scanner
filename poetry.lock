@@ -694,4 +694,4 @@ scanner = ["authlib", "elasticsearch", "httpx", "sdnotify", "tomli", "typeguard"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "ecc58ae5df1e760eb9605b2029a0fd40c03e3ac112a7983496b4adecabcf9a5c"
+content-hash = "11edb1e19045a8f209d90b7443c39cc364f5e56523eeff1f871528841ccea71d"
